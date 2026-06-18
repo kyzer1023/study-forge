@@ -99,16 +99,16 @@ Install from GitHub:
 npx skills add https://github.com/kyzer1023/study-forge --skill study-forge --agent codex --copy -y
 ```
 
-The installable skill lives at:
+The installable skill lives directly in:
 
 ```text
-skills/study-forge
+skills
 ```
 
 For local testing before publishing, point Codex at:
 
 ```text
-C:\Dev\study-forge\skills\study-forge
+C:\Dev\study-forge\skills
 ```
 
 ## Design Principles
