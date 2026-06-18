@@ -1,17 +1,17 @@
-# cs-exam-skill
+# study-forge
 
-Codex skill for CS exam-pressure tutoring: source-backed, mark-oriented, direct, and beginner-intuitive when needed.
+Study Forge helps students turn slides, PDFs, exam papers, and examples into simple explanations, high-yield notes, drills, traces, and exam-ready answers.
 
 The installable skill lives at:
 
 ```text
-skills/cs-exam
+skills/study-forge
 ```
 
 Install locally with:
 
 ```powershell
-npx skills add https://github.com/kyzer1023/cs-exam-skill --skill cs-exam --agent codex --copy -y
+npx skills add https://github.com/kyzer1023/study-forge --skill study-forge --agent codex --copy -y
 ```
 
-For local testing before publishing, point Codex at `C:\Dev\cs-exam-skill\skills\cs-exam`.
+For local testing before publishing, point Codex at `C:\Dev\study-forge\skills\study-forge`.
