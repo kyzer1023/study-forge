@@ -29,3 +29,7 @@ Then add:
 - one tiny drill
 
 Prefer concrete examples over abstract notation first. Add formal notation after the intuition.
+
+## Feeds Artifact
+
+Trace output can feed `artifact trace-lab` by turning the traced steps into an artifact with initial state, rule applied, state changes, invariant, result, complexity, and traps. Keep source-derived code, SQL, protocol, or diagram details visible in the artifact's source basis.

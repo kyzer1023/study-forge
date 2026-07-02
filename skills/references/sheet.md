@@ -27,3 +27,7 @@ Use sections:
 - final 10-question self-test
 
 Keep it dense, readable, and exam-facing.
+
+## Feeds Artifact
+
+Sheet output can feed `artifact atlas` when the user wants a navigable artifact instead of a compact chat answer. Preserve the sheet's condensed definitions, flows, comparisons, formulas, traps, and self-test while adding source basis and verification details.

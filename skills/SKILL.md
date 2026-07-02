@@ -18,7 +18,7 @@ Before teaching, check whether the user provided source material:
 - syllabus, assignment brief, rubric, topic list, or marking scheme
 - code, notebooks, SQL, config, diagrams, or exported artifacts
 
-For `distill`, `map`, `deconstruct`, `mark`, and `sheet`, source material is required by default. If none is provided, pause and ask the user to attach files or point to paths before giving exam-priority claims.
+For `distill`, `map`, `deconstruct`, `mark`, `sheet`, and `artifact`, source material is required by default. If none is provided, pause and ask the user to attach files or point to paths before giving exam-priority claims or creating a study artifact.
 
 For `trace` or a quick concept explanation, proceed without sources if needed, but clearly label the answer as general CS explanation rather than source-backed exam guidance.
 
@@ -90,11 +90,13 @@ Do not over-focus on formulas unless the material actually needs them. For CS, p
 | `mark [answer]` | Harshly grade a user answer and provide corrected wording | [references/mark.md](references/mark.md) |
 | `rescue [scope]` | Last-minute triage for maximum marks under time pressure | [references/rescue.md](references/rescue.md) |
 | `sheet [scope]` | Produce final condensed revision sheets | [references/sheet.md](references/sheet.md) |
+| `artifact [mode] [source/scope]` | Build a source-backed study artifact; `atlas` is the default mode when omitted | [references/artifact.md](references/artifact.md) |
 
 ## Routing
 
 - No argument: show the command menu and ask what source material the user has.
 - First word matches a command: load that reference file and follow it.
+- For `artifact`, load [references/artifact.md](references/artifact.md); use `atlas` when mode is omitted, and route explicit modes to `atlas`, `formula-lab`, `trace-lab`, or `drill-pack`.
 - First word does not match a command: apply the core setup and answer as a source-backed CS exam tutor.
 
 Do not re-read every reference file. Load only the command reference needed for the current request.

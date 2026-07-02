@@ -28,3 +28,7 @@ Use this structure:
 8. Study strategy: what to do in 30 minutes, 1 hour, or 2 hours
 
 Keep explanations concise, but keep mark-critical details.
+
+## Feeds Artifact
+
+Distill output can feed `artifact atlas` as the source-backed content spine: topic overview, high-yield ranking, exam machinery, traps, and quick checks. Keep the original source basis attached so the artifact does not drift from the inspected material.

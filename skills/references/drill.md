@@ -21,3 +21,7 @@ Provide:
 - weak-area diagnosis after the user replies
 
 Avoid dumping huge question banks. Prioritize the questions most likely to expose misunderstanding.
+
+## Feeds Artifact
+
+Drill output can feed `artifact drill-pack` by grouping questions into a reusable practice artifact with mark value or difficulty, answer reveal behavior, and weak-area repair notes. Preserve the source basis for any exam-specific questions.

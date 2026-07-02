@@ -40,7 +40,7 @@ For exam-specific work, Study Forge expects one or more sources:
 - syllabus, assignment brief, rubric, marking scheme, or topic list
 - notebooks, code, SQL, diagrams, or exported artifacts
 
-If you ask for likely exam topics, chapter distillation, marking, or a final sheet without sources, the skill should ask you to attach files or provide paths first.
+If you ask for likely exam topics, chapter distillation, marking, a final sheet, or a study artifact without sources, the skill should ask you to attach files or provide paths first.
 
 It can still answer general concept questions without sources, but it should label that as general explanation rather than source-backed exam prioritization.
 
@@ -58,6 +58,7 @@ All commands run through `$study-forge`:
 | `$study-forge mark` | Grade your answer harshly, estimate marks, and rewrite it into exam-ready wording |
 | `$study-forge rescue` | Triage what to study first when time is short |
 | `$study-forge sheet` | Create a condensed revision sheet from source materials |
+| `$study-forge artifact` | Create a source-backed study artifact; defaults to `atlas` when no mode is given |
 
 ### Usage Examples
 
@@ -70,6 +71,7 @@ $study-forge drill "network layer control plane"
 $study-forge mark "my answer: ..."
 $study-forge rescue "I have 2 hours and only these slides"
 $study-forge sheet attached lecture screenshots
+$study-forge artifact atlas "C:\CS_USM\Y2S2\CST235\Lecture"
 ```
 
 Or use it directly with a natural request:
