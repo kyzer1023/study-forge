@@ -30,4 +30,6 @@ Keep it dense, readable, and exam-facing.
 
 ## Feeds Artifact
 
-Sheet output can feed `artifact atlas` when the user wants a navigable artifact instead of a compact chat answer. Preserve the sheet's condensed definitions, flows, comparisons, formulas, traps, and self-test while adding source basis and verification details.
+Sheet output can feed `artifact atlas` when the user wants a navigable artifact instead of a compact chat answer. Preserve the sheet's condensed definitions, flows, comparisons, formulas, traps, and self-test while adding source basis and verification details. If the artifact is a revision website, each Required topic still needs enough teaching content to stand alone; slide/page references should only prove where the content came from.
+
+For `artifact past-year`, the sheet's compact source basis and proof notes can feed the artifact answer ledger as learner-facing revision wording. Keep source refs as proof, not as a substitute for condensed definitions, comparisons, formulas, traps, worked examples, or the self-test.

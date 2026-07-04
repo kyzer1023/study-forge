@@ -31,4 +31,6 @@ Keep explanations concise, but keep mark-critical details.
 
 ## Feeds Artifact
 
-Distill output can feed `artifact atlas` as the source-backed content spine: topic overview, high-yield ranking, exam machinery, traps, and quick checks. Keep the original source basis attached so the artifact does not drift from the inspected material.
+Distill output can feed `artifact atlas` as the source-backed content spine: topic overview, high-yield ranking, exam machinery, traps, and quick checks. When feeding a revision artifact, expand terse bullets into enough distilled explanation, definitions, examples, traps, and checks for the student to revise from the artifact directly. Keep the original source basis attached as evidence so the artifact does not drift from the inspected material, but do not let citations replace the teaching content.
+
+For `artifact past-year`, pass distilled source basis and proof notes into the artifact answer ledger or source index as support for learner-facing answers. The ledger/source refs prove where the explanation came from; they do not replace the explanation, examples, traps, or checks the student needs to study.
