@@ -82,6 +82,7 @@ Do not over-focus on formulas unless the material actually needs them. For CS, p
 
 | Command | Purpose | Reference |
 |---|---|---|
+| `index [course-folder]` | Build a reusable semantic source-pack for a course folder; alias: `source-index [course-folder]` | [references/index.md](references/index.md) |
 | `distill [source]` | Turn slides/PDFs into high-yield exam notes | [references/distill.md](references/distill.md) |
 | `map [source]` | Rank syllabus/brief/past-paper coverage into required, optional, skip | [references/map.md](references/map.md) |
 | `deconstruct [question]` | Break down worked examples or past-paper questions | [references/deconstruct.md](references/deconstruct.md) |
@@ -96,6 +97,8 @@ Do not over-focus on formulas unless the material actually needs them. For CS, p
 
 - No argument: show the command menu and ask what source material the user has.
 - First word matches a command: load that reference file and follow it.
+- For `index` or `source-index`, load [references/index.md](references/index.md). Treat it as a feeder workflow that builds a course-local semantic source-pack, not as an `artifact` mode.
+- For source-heavy commands (`distill`, `map`, `deconstruct`, `mark`, `sheet`, and `artifact`), prefer a fresh source-pack when present, then reopen original PDFs, slides, screenshots, notebooks, or code for stale hashes, missing records, low-confidence visual interpretation, source gaps, unreadable pages, or spot checks. The original course files remain authority.
 - For `artifact`, load [references/artifact.md](references/artifact.md); use `atlas` when mode is omitted, and route explicit modes to `atlas`, `past-year`, `formula-lab`, `trace-lab`, or `drill-pack`. For revision or atlas artifacts, source/page references are evidence only; the artifact must teach the mapped topics directly enough to study from without opening the source PDFs. For `past-year`, use the proof-plane workflow in the artifact reference: create proof docs and the `answer-ledger.json` answer ledger, then run `studyforge-verifier` verifier lane checks for extraction, coverage, evidence, correctness, and learner surface before calling the answers ready.
 - First word does not match a command: apply the core setup and answer as a source-backed CS exam tutor.
 

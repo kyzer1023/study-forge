@@ -2,7 +2,7 @@
 
 Source-backed studying for students. One Codex skill that turns slides, PDFs, exam papers, examples, notebooks, code, and rubrics into simple explanations, high-yield notes, traces, drills, and exam-ready answers.
 
-> Quick start: attach or point to your course materials, then use `$study-forge <command> <target>`. Start with `$study-forge distill lecture.pdf` or `$study-forge rescue "final tomorrow"` when time is tight.
+> Quick start: attach or point to your course materials, then use `$study-forge <command> <target>`. Start with `$study-forge distill lecture.pdf`, `$study-forge index "C:\...\Course"` for a full course folder, or `$study-forge rescue "final tomorrow"` when time is tight.
 
 ## Why Study Forge?
 
@@ -44,12 +44,15 @@ If you ask for likely exam topics, chapter distillation, marking, a final sheet,
 
 It can still answer general concept questions without sources, but it should label that as general explanation rather than source-backed exam prioritization.
 
+For large course folders, `$study-forge index <course-folder>` is the feeder workflow. PDFs, slides, and screenshots stay the authority; the source-pack is fast indexed access. Downstream commands use the pack first when it is fresh, and the pack records confidence notes and gaps in plain language so uncertain pages stay visible.
+
 ## Commands
 
 All commands run through `$study-forge`:
 
 | Command | What it does |
 |---|---|
+| `$study-forge index <course-folder>` | Build a reusable semantic source-pack for a course folder; alias: `$study-forge source-index <course-folder>` |
 | `$study-forge distill` | Turn slides, PDFs, or screenshots into high-yield notes and likely question types |
 | `$study-forge map` | Rank a syllabus, rubric, lecture folder, or past papers into required, optional, and skip |
 | `$study-forge deconstruct` | Break down examples, worked solutions, or past-paper questions step by step |
@@ -63,6 +66,10 @@ All commands run through `$study-forge`:
 ### Usage Examples
 
 ```text
+$study-forge index "C:\...\Course"
+$study-forge artifact past-year "C:\...\Course"
+$study-forge index "C:\CS_USM\Y2S2\CST235"
+$study-forge source-index "C:\CS_USM\Y2S2\CPT212"
 $study-forge distill "C:\CS_USM\Y2S2\CPT212\Lecture\14a Graphs Pt.1.pdf"
 $study-forge map "C:\CS_USM\Y2S2\CST235\Lecture"
 $study-forge deconstruct attached past-year question
@@ -74,6 +81,8 @@ $study-forge sheet attached lecture screenshots
 $study-forge artifact atlas "C:\CS_USM\Y2S2\CST235\Lecture"
 $study-forge artifact past-year "C:\CS_USM\Y2S2\CST235"
 ```
+
+After the first command builds the pack, the later `artifact past-year` command reuses that pack first when file hashes still match, then reopens original materials for missing pages, stale records, low-confidence visual interpretation, source gaps, or spot checks.
 
 Or use it directly with a natural request:
 
