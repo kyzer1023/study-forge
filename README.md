@@ -58,7 +58,7 @@ All commands run through `$study-forge`:
 | `$study-forge mark` | Grade your answer harshly, estimate marks, and rewrite it into exam-ready wording |
 | `$study-forge rescue` | Triage what to study first when time is short |
 | `$study-forge sheet` | Create a condensed revision sheet from source materials |
-| `$study-forge artifact` | Create a source-backed study artifact; defaults to `atlas` when no mode is given |
+| `$study-forge artifact` | Create a source-backed study artifact; defaults to `atlas` when no mode is given; use `past-year` for verifier-checked lecture-grounded past-paper answer packs |
 
 ### Usage Examples
 
@@ -72,6 +72,7 @@ $study-forge mark "my answer: ..."
 $study-forge rescue "I have 2 hours and only these slides"
 $study-forge sheet attached lecture screenshots
 $study-forge artifact atlas "C:\CS_USM\Y2S2\CST235\Lecture"
+$study-forge artifact past-year "C:\CS_USM\Y2S2\CST235"
 ```
 
 Or use it directly with a natural request:
@@ -112,6 +113,14 @@ For local testing before publishing, point Codex at:
 ```text
 C:\Dev\study-forge\skills
 ```
+
+### Verifier Agent Install
+
+`artifact past-year` uses the source-controlled verifier role in `agents/studyforge-verifier.toml` and the lane instructions in `skills/references/studyforge-verifier.md`.
+
+The optional Codex agent install path is `C:\Users\kyzer\.codex\agents\studyforge-verifier.toml`. Do not install it globally unless the user asks for that install; normal Study Forge docs, artifact work, and verification passes should not copy files into `C:\Users\kyzer\.codex\agents`.
+
+Fallback when the TOML is not installed: spawn a normal subagent or worker for the needed lane, then paste the verifier lane instructions from `skills/references/studyforge-verifier.md` into that prompt with the lane name, answer ledger or proof docs, and expected `PASS` / `MAJOR` / `BLOCKING` output schema.
 
 ## Design Principles
 

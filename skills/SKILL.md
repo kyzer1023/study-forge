@@ -1,6 +1,6 @@
 ---
 name: study-forge
-description: Use when the user wants source-backed studying or tutoring that turns slides, PDFs, exam papers, examples, screenshots, briefs, rubrics, notebooks, code, or other course materials into simple explanations, high-yield notes, drills, traces, condensed study sheets, and exam-ready answers. Supports computer-science learning across data structures, algorithms, networking, operating systems, databases, software engineering, AI/ML notebooks, programming, and coursework-adjacent revision. Also use for exam-pressure mode, harsh marking, last-minute rescue planning, and mark-oriented prioritization; ask for sources before making exam-priority claims when none are provided.
+description: Use when the user wants source-backed studying or tutoring that turns slides, PDFs, exam papers, examples, screenshots, briefs, rubrics, notebooks, code, or other course materials into simple explanations, high-yield notes, drills, traces, condensed study sheets, verified past-year answer artifacts, and exam-ready answers. Supports computer-science learning across data structures, algorithms, networking, operating systems, databases, software engineering, AI/ML notebooks, programming, and coursework-adjacent revision. Also use for exam-pressure mode, harsh marking, last-minute rescue planning, and mark-oriented prioritization; ask for sources before making exam-priority claims when none are provided.
 ---
 
 # Study Forge
@@ -90,13 +90,13 @@ Do not over-focus on formulas unless the material actually needs them. For CS, p
 | `mark [answer]` | Harshly grade a user answer and provide corrected wording | [references/mark.md](references/mark.md) |
 | `rescue [scope]` | Last-minute triage for maximum marks under time pressure | [references/rescue.md](references/rescue.md) |
 | `sheet [scope]` | Produce final condensed revision sheets | [references/sheet.md](references/sheet.md) |
-| `artifact [mode] [source/scope]` | Build a source-backed study artifact; `atlas` is the default mode when omitted | [references/artifact.md](references/artifact.md) |
+| `artifact [mode] [source/scope]` | Build a self-contained source-backed study artifact; `atlas` is the default mode when omitted; use `past-year` for lecture-grounded past-paper answer packs with proof docs | [references/artifact.md](references/artifact.md) |
 
 ## Routing
 
 - No argument: show the command menu and ask what source material the user has.
 - First word matches a command: load that reference file and follow it.
-- For `artifact`, load [references/artifact.md](references/artifact.md); use `atlas` when mode is omitted, and route explicit modes to `atlas`, `formula-lab`, `trace-lab`, or `drill-pack`.
+- For `artifact`, load [references/artifact.md](references/artifact.md); use `atlas` when mode is omitted, and route explicit modes to `atlas`, `past-year`, `formula-lab`, `trace-lab`, or `drill-pack`. For revision or atlas artifacts, source/page references are evidence only; the artifact must teach the mapped topics directly enough to study from without opening the source PDFs. For `past-year`, use the proof-plane workflow in the artifact reference: create proof docs and the `answer-ledger.json` answer ledger, then run `studyforge-verifier` verifier lane checks for extraction, coverage, evidence, correctness, and learner surface before calling the answers ready.
 - First word does not match a command: apply the core setup and answer as a source-backed CS exam tutor.
 
 Do not re-read every reference file. Load only the command reference needed for the current request.
@@ -108,6 +108,9 @@ Do not re-read every reference file. Load only the command reference needed for 
 - Do not answer from memory when a brief, slide, PDF, notebook, code file, or exported artifact is available.
 - Do not bury the verdict under caveats.
 - Do not over-cite, over-polish, or decorate.
+- Do not create a revision artifact that is mainly navigation, links, slide references, or page citations instead of teachable study content.
+- Do not answer past-year paper questions from general model knowledge when lecture slides or lecturer examples are available; cite course-source evidence or mark the item as a source gap.
+- Do not call a past-year answer artifact ready until proof docs, the answer ledger, and verifier lane checks have covered extraction, question coverage, lecture evidence, answer correctness, and learner surface, or until the artifact clearly states that subagent verification was unavailable and documents the same lanes as fallback checks.
 - Do not add figures unless they improve understanding.
 - Do not confuse implemented with triggered, source text with rendered artifact, or old sample with current authority.
 - Do not expose secrets, account details, emails, or personal contact details found in files or logs.
