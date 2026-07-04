@@ -1,7 +1,8 @@
 # Study Forge Verifier
 
-Use one portable verifier role, `studyforge-verifier`, for `artifact past-year` quality control. Run it once per lane with one of these lane values:
+Use one portable verifier role, `studyforge-verifier`, for `artifact past-year` quality control and source-pack validation. Run it once per lane with one of these lane values:
 
+- `source_index`
 - `extraction`
 - `coverage`
 - `evidence`
@@ -17,8 +18,20 @@ Do not create separate verifier TOMLs per lane. If the TOML is not installed in 
 - Fail closed. Unsupported answers become `Source gap`; unreadable questions, diagrams, or tables become `Unreadable` until extraction is repaired.
 - Check the proof plane and the learner plane for drift: `answer-ledger.json`, verifier reports, QA reports, and HTML/artifact output must describe the same questions and statuses.
 - Do not claim true subagent verification unless the check really ran as an independent verifier invocation. Local fallback checks must be labeled as fallback.
+- Keep the verifier role separate from `studyforge-indexer`: the indexer creates or refreshes source-pack records, while this role challenges the completed pack and reports defects.
 
 ## Lane Checklists
+
+### `source_index`
+
+- Confirm the source-pack source inventory accounts for every in-scope course file and marks duplicates, out-of-scope files, unsupported formats, unreadable files, and source gaps with explicit reasons.
+- Check manifest freshness against current files: schema version, required pack files, source hashes, sizes, mtimes when available, pack build time, and `pack-verification.json` status must reject stale-pack reuse.
+- Reconcile source count and page-record count across `manifest.json`, `source-inventory.json`, `page-records.jsonl`, `topic-index.json`, and `pack-verification.json`; flag missing, duplicate, or orphaned page records.
+- Sample visual interpretation status for image-heavy, diagram, table, formula, screenshot, and rendered-page records. Affected records need rendered-image locators, factual visual descriptions, inferred teaching intent, or explicit `visual_gap`, `needs_manual_review`, or `unreadable` gaps.
+- Check confidence labels on page records and topics. `interpreted_high_confidence`, `interpreted_low_confidence`, `ocr_only`, `visual_only`, `needs_manual_review`, and `unreadable` must be used honestly and supported by evidence.
+- Check topic-index coverage by comparing syllabus/rubric/topic-list or past-year topic needs against `topic-index.json` and source locators; flag unmapped required topics, weak topic-source fit, and topics backed only by stale or low-confidence records.
+- Check consumer fallback behavior: downstream commands must open original PDFs or source files when the pack is missing, stale, low-confidence, visually incomplete, unreadable, contradicted by the prompt, or challenged by verifier findings.
+- Use whole-pack findings for pack defects. Set `question_id: null` or use a pack-level id such as `"source_pack"` when the issue is not tied to one past-year question.
 
 ### `extraction`
 
@@ -57,18 +70,19 @@ Do not create separate verifier TOMLs per lane. If the TOML is not installed in 
 
 ## Output Schema
 
-Return one report using this schema. Use `PASS`, `MAJOR`, or `BLOCKING` for `status`. Use `question_id: null` only for whole-paper or whole-artifact findings.
+Return one report using this schema. Use `PASS`, `MAJOR`, or `BLOCKING` for `status`. Use `question_id: null` for whole-paper, whole-artifact, or whole-pack findings; a pack-level id such as `"source_pack"` is also allowed for `source_index` findings.
 
 ```json
 {
   "verifier": "studyforge-verifier",
-  "lane": "extraction | coverage | evidence | correctness | learner_surface",
+  "lane": "source_index | extraction | coverage | evidence | correctness | learner_surface",
   "status": "PASS | MAJOR | BLOCKING",
   "summary": "One concise verdict for the checked lane.",
   "findings": [
     {
       "status": "PASS | MAJOR | BLOCKING",
-      "question_id": "string or null",
+      "lane": "source_index | extraction | coverage | evidence | correctness | learner_surface",
+      "question_id": "string, pack-level id, or null",
       "evidence": "Specific source, ledger, artifact, or verifier-report observation that supports the finding.",
       "required_fix": "Concrete fix required before the item can be called ready, or null for PASS findings."
     }
