@@ -186,7 +186,7 @@ Blocking conditions:
 - a sample answer or marking scheme contradicts the answer and the conflict is not explained
 - extraction dropped a material table, diagram, mark value, or instruction
 
-Do not call the artifact ready while any blocking finding remains. Fix major findings when possible; if the course sources cannot support a fix, change the ledger status to `Source gap` and name the missing evidence. If extraction is too damaged to trust, change the ledger status to `Unreadable` and name the unreadable source region. The final HTML must include a visible Verifier Notes section listing verifier lanes run, pass/fail status, unresolved source gaps, unreadable items, and whether true subagent verification was used. If subagent tools are unavailable, run the same lanes as separate local passes and label the result as fallback verification, not subagent-verified.
+Do not call the artifact ready while any blocking finding remains. Fix major findings when possible; if the course sources cannot support a fix, change the ledger status to `Source gap` and name the missing evidence. If extraction is too damaged to trust, change the ledger status to `Unreadable` and name the unreadable source region. The final HTML must include a visible Verifier Notes section listing verifier lanes run, pass/fail status, unresolved source gaps, unreadable items, and which verifier lanes ran as independent subagent checks versus fallback local checks. If subagent tools are unavailable, run the same lanes as separate local passes and label the result as fallback verification, not subagent-verified.
 
 ### Formula-Lab
 
