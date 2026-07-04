@@ -6,6 +6,12 @@ Use when time is short, the user is anxious, or the user asks what to do first.
 
 If sources exist, inspect them and triage from evidence. If no sources exist, give a temporary emergency plan and ask for slides, exam paper, topic list, or rubric immediately.
 
+## Source-Pack Preflight
+
+For course folders or known local source sets, look for a fresh `.study-forge/source-pack/manifest.json` first. If it is present and fresh, use the source-pack before reopening PDFs, slides, screenshots, or source files: pull topic coverage, exam signals, source locators, confidence labels, visual notes, and gaps as the access layer.
+
+Use fallback to original PDFs, slides, screenshots, syllabuses, rubrics, past papers, notebooks, code, or other source files when the manifest is missing, hashes are stale, the needed record is missing, visual interpretation is low-confidence, the pack records a `Source gap`, the page is `Unreadable`, a verifier challenge disputes the pack, or a spot check is needed. Do not rebuild or reindex here; inspect original sources and recommend `$study-forge index <course-folder>` when useful. Original course files remain authority.
+
 ## Workflow
 
 1. Identify time available and scope if the user provided it.
