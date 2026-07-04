@@ -44,7 +44,7 @@ If you ask for likely exam topics, chapter distillation, marking, a final sheet,
 
 It can still answer general concept questions without sources, but it should label that as general explanation rather than source-backed exam prioritization.
 
-For large course folders, `$study-forge index <course-folder>` is the feeder workflow. PDFs, slides, and screenshots stay the authority; the source-pack is fast indexed access. Downstream commands use the pack first when it is fresh, and the pack records confidence notes and gaps in plain language so uncertain pages stay visible.
+For large course folders, `$study-forge index <course-folder>` is the feeder workflow. PDFs, slides, and screenshots stay the authority; the source-pack is fast indexed access. PDF-heavy or multi-source indexing should run `studyforge-indexer` lanes by file, file bundle, or page range, then an independent `studyforge-verifier source_index` lane before the pack is called ready. Downstream commands use the pack first when it is fresh, and the pack records confidence notes and gaps in plain language so uncertain pages stay visible.
 
 ## Commands
 
@@ -125,11 +125,11 @@ C:\Dev\study-forge\skills
 
 ### Verifier Agent Install
 
-`artifact past-year` uses the source-controlled verifier role in `agents/studyforge-verifier.toml` and the lane instructions in `skills/references/studyforge-verifier.md`.
+`$study-forge index` uses the source-controlled indexer role in `agents/studyforge-indexer.toml` plus the workflow in `skills/references/studyforge-indexer.md`. `artifact past-year` and source-pack readiness checks use the verifier role in `agents/studyforge-verifier.toml` and the lane instructions in `skills/references/studyforge-verifier.md`.
 
-The optional Codex agent install path is `C:\Users\kyzer\.codex\agents\studyforge-verifier.toml`. Do not install it globally unless the user asks for that install; normal Study Forge docs, artifact work, and verification passes should not copy files into `C:\Users\kyzer\.codex\agents`.
+The optional Codex agent install paths are `C:\Users\kyzer\.codex\agents\studyforge-indexer.toml` and `C:\Users\kyzer\.codex\agents\studyforge-verifier.toml`. Do not install them globally unless the user asks for that install; normal Study Forge docs, artifact work, and verification passes should not copy files into `C:\Users\kyzer\.codex\agents`.
 
-Fallback when the TOML is not installed: spawn a normal subagent or worker for the needed lane, then paste the verifier lane instructions from `skills/references/studyforge-verifier.md` into that prompt with the lane name, answer ledger or proof docs, and expected `PASS` / `MAJOR` / `BLOCKING` output schema.
+Fallback when a TOML is not installed: spawn a normal subagent or worker for the needed lane, then paste the relevant lane instructions from `skills/references/studyforge-indexer.md` or `skills/references/studyforge-verifier.md`. Label fallback checks as `fallback_local`; do not claim `subagent-verified` status unless an independent subagent or installed role actually ran.
 
 ## Design Principles
 

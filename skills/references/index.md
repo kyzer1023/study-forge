@@ -4,6 +4,17 @@ Use for `$study-forge index <course-folder>` or `$study-forge source-index <cour
 
 The command builds a reusable semantic source-pack for a course folder. Original PDFs remain authority; the source-pack is an indexed access layer that helps later Study Forge commands find text, visuals, topics, and locators quickly. It must never be treated as stronger than the current source files.
 
+## Execution Contract
+
+`$study-forge index` is a two-stage workflow:
+
+1. Run `studyforge-indexer` lanes first. For PDF-heavy or multi-source folders, assign each in-scope file, coherent file bundle, or large-PDF page range to an indexer lane instead of letting the main agent produce a single-agent baseline. Use topics as output from the index, not as the primary sharding key; topic boundaries are discovered after extraction.
+2. Run an independent `studyforge-verifier` invocation with lane `source_index` after the indexer handoff. The verifier challenges source inventory, freshness, page accounting, visual interpretation, confidence labels, topic coverage, and downstream fallback behavior.
+
+Do not call a source-pack `subagent-verified`, `ready`, or broadly reusable until the `source_index` verifier lane has run and its material findings are fixed or recorded as source gaps. If subagent tools or TOML-backed roles are unavailable, run the same checks as fallback local passes, label them `fallback_local`, and set the pack status to `baseline_unverified` or `usable_with_recorded_gaps`, not `subagent-verified`.
+
+Record the execution mode in `pack-verification.json`: indexer lanes run, verifier lanes run, fallback lanes, lane status, and unresolved findings. A main-agent-only pack may be useful for orientation, but it is only a baseline source-pack until an independent verifier lane challenges it.
+
 ## Source Discovery
 
 1. Start from the provided course folder and keep all outputs inside that folder.
@@ -44,7 +55,7 @@ The folder is course-local so file hashes and relative paths can be checked wher
 | `topic-index.json` | Topic, definition, formula, algorithm, example, trap, prerequisite, and exam-keyword map back to page records and source locators. |
 | `source-locators.json` | Stable locator table for file paths, page numbers, slide labels, page images, regions, anchors, and source snippets used by downstream commands. |
 | `extraction-report.json` | Toolchain, extraction methods, OCR methods, rendering notes, warnings, prompt-injection notes, unreadable regions, manual-review notes, and known limitations. |
-| `pack-verification.json` | Schema checks, freshness checks, source/page count reconciliation, visual interpretation checks, topic coverage sampling, verifier findings, and final pack status. |
+| `pack-verification.json` | Schema checks, freshness checks, source/page count reconciliation, visual interpretation checks, topic coverage sampling, indexer/verifier lane status, fallback labels, verifier findings, and final pack status. |
 | `chunks/` | Optional semantic chunks or extracted text snippets. Each chunk must reference `source_id`, `page_id`, and locator data. |
 | `rendered-pages/` | Optional rendered page images. Every image used by a page record must have a path and hash recorded in `page-records.jsonl`. |
 
@@ -182,6 +193,7 @@ A source-pack is fresh only when all of these are true:
 4. Every page record has a valid `source.id`, `source.path`, `source.hash`, `locator`, `confidence.status`, and gap decision.
 5. Any page with visual meaning has either a rendered image reference, a visual interpretation, or a clear `needs_manual_review`, `visual_gap`, or `unreadable_gap`.
 6. `pack-verification.json` records the latest validation pass and does not contain unresolved blocking freshness or schema findings.
+7. PDF-heavy or multi-source packs record at least one `studyforge-indexer` lane and one independent `studyforge-verifier` `source_index` lane, or explicitly label the run `fallback_local` / `baseline_unverified` when subagent tooling was unavailable.
 
 If any rule fails, downstream commands may still read the pack for orientation, but they must open the original source files for affected pages and refresh or mark the stale records before relying on them.
 
