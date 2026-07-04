@@ -6,6 +6,12 @@ Use to produce condensed revision sheets.
 
 Require source material for exam-specific sheets. If no source exists, produce only a general concept sheet and label it as such.
 
+## Source-Pack Routing
+
+For course folders or known local source sets, look for a fresh `.study-forge/source-pack/manifest.json` first. If it is present and fresh, use the source-pack before reopening PDFs: build the condensed sheet from high-confidence definitions, flows, formulas, comparisons, diagrams, traps, examples, self-test cues, source locators, and recorded gaps.
+
+Use fallback to source PDFs, slides, screenshots, notebooks, code, or other original files when the manifest is missing, hashes are stale, the needed page/topic is missing, visual interpretation is low-confidence, the pack records a `Source gap`, the page is `Unreadable`, a verifier challenge disputes the pack, or a spot check is needed. If no fresh pack exists, inspect the original sources directly before compressing material into an exam-specific sheet.
+
 ## Workflow
 
 1. Inspect the source.

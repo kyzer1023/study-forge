@@ -12,6 +12,14 @@ Require source material by default. If no source is provided, pause and ask for 
 
 If the user wants a no-source exploration, do not create an artifact. Answer in chat as a clearly labeled general explanation, then ask for sources before building any artifact.
 
+## Source-Pack Routing
+
+When the source scope is a course folder or known local source set, look for a fresh `.study-forge/source-pack/manifest.json` first. If the manifest is present and fresh, use the source-pack before reopening PDFs: read the inventory, page records, topic index, locators, confidence labels, visual notes, and gaps as the source evidence/access layer.
+
+Use fallback to source PDFs, slides, screenshots, notebooks, code, or other original files when the manifest is missing, hashes are stale, the needed page/topic is missing, visual interpretation is low-confidence, the pack records a `Source gap`, the page is `Unreadable`, a verifier challenge disputes the pack, or a spot check is needed. If no fresh pack exists, inspect the original source material directly before creating the artifact.
+
+For `artifact past-year`, preserve the proof plane: `answer-ledger.json` remains the canonical answer source for HTML rendering and QA summaries. The source-pack can feed source evidence, topic-source fit, locators, stale-hash decisions, source gaps, and unreadable-page notes, but it must not replace the answer ledger.
+
 ## Modes
 
 - `atlas`: default mode; build a self-contained revision atlas from the source, with topic sections that teach the material directly, not a dashboard that mainly sends the student back to source PDFs.

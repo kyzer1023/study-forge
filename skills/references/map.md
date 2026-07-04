@@ -2,6 +2,12 @@
 
 Use for syllabuses, briefs, rubrics, topic lists, lecture folders, or past papers.
 
+## Source-Pack Routing
+
+For course folders or known local source sets, look for a fresh `.study-forge/source-pack/manifest.json` first. If it is present and fresh, use the source-pack before reopening PDFs: start the coverage map from its inventory, topic index, page records, locators, confidence labels, visual notes, and gaps.
+
+Use fallback to source PDFs, syllabuses, briefs, rubrics, slides, past papers, or other original files when the manifest is missing, hashes are stale, the needed page/topic is missing, visual interpretation is low-confidence, the pack records a `Source gap`, the page is `Unreadable`, a verifier challenge disputes the pack, or a spot check is needed. If no fresh pack exists, inspect the original source files directly before ranking Required, Optional, or Skip.
+
 ## Workflow
 
 1. Inspect available source files before ranking.

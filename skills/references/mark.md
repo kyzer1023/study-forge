@@ -6,6 +6,12 @@ Use to grade the user's answers like an examiner.
 
 Use the marking scheme, rubric, past paper, slides, or lecturer wording when available. If no marking source exists, grade as a general CS examiner and say that the score is approximate.
 
+## Source-Pack Routing
+
+For course folders or known local source sets, look for a fresh `.study-forge/source-pack/manifest.json` first. If it is present and fresh, use the source-pack before reopening PDFs: pull expected answer points, lecturer wording, marking-source locators, confidence labels, visual notes, and gaps from the pack as the source evidence/access layer.
+
+Use fallback to source PDFs, marking schemes, rubrics, past papers, slides, or other original files when the manifest is missing, hashes are stale, the needed page/topic is missing, visual interpretation is low-confidence, the pack records a `Source gap`, the page is `Unreadable`, a verifier challenge disputes the pack, or a spot check is needed. If no fresh pack exists, inspect available marking sources directly before grading; only use general examiner judgment when no source material exists.
+
 ## Workflow
 
 1. Identify the expected answer points.

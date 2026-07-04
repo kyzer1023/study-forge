@@ -6,6 +6,12 @@ Use for lecture slides, PDFs, screenshots, or chapter material.
 
 Require source material. If none is provided, ask for slides, PDFs, screenshots, or a local folder path before claiming what is high-yield.
 
+## Source-Pack Routing
+
+For course folders or known local source sets, look for a fresh `.study-forge/source-pack/manifest.json` first. If it is present and fresh, use the source-pack before reopening PDFs: pull repeated terms, examples, diagrams, lecturer wording, confidence labels, visual notes, gaps, and locators from the pack as the source evidence/access layer.
+
+Use fallback to source PDFs, slides, screenshots, or original files when the manifest is missing, hashes are stale, the needed page/topic is missing, visual interpretation is low-confidence, the pack records a `Source gap`, the page is `Unreadable`, a verifier challenge disputes the pack, or a spot check is needed. If no fresh pack exists, inspect the original sources directly before ranking or explaining the material.
+
 ## Workflow
 
 1. Identify the chapter/topic and source files inspected.
