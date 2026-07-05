@@ -73,11 +73,34 @@ HOOK_AUTHORIZATION_SENTENCE: Final = (
     "without second approval."
 )
 OPT_OUT_TOKENS: Final = ("local only", "no subagents", "no delegation", "restricts tool use")
-HOOK_OPT_OUT_PHRASES: Final = ("local only", "no subagents", "no delegation", "stay local")
-SOURCE_HEAVY_COMMAND_PATTERNS: Final = (
+HOOK_OPT_OUT_PHRASES: Final = (
+    "local only",
+    "stay local",
+    "no subagents",
+    "no delegation",
+    "no delegate",
+    "no agents",
+    "no workers",
+    "do not use subagents",
+    "do not use agents",
+    "do not use workers",
+    "do not delegate",
+    "do not spawn",
+    "don't use subagents",
+    "don't use agents",
+    "don't use workers",
+    "don't delegate",
+    "without subagents",
+    "without agents",
+    "without workers",
+    "without delegation",
+)
+INHERENTLY_SOURCE_HEAVY_COMMAND_PATTERNS: Final = (
     "$study-forge index",
     "$study-forge source-index",
     "$study-forge artifact",
+)
+SOURCE_SCOPED_STUDY_COMMAND_PATTERNS: Final = (
     "$study-forge distill",
     "$study-forge map",
     "$study-forge sheet",
@@ -86,6 +109,28 @@ SOURCE_HEAVY_COMMAND_PATTERNS: Final = (
     "$study-forge drill",
     "$study-forge mark",
     "$study-forge rescue",
+)
+SOURCE_SCOPE_HINTS: Final = (
+    ":\\\\",
+    "\\\\",
+    "/",
+    ".study-forge",
+    ".pdf",
+    ".ppt",
+    ".pptx",
+    ".docx",
+    ".ipynb",
+    ".py",
+    ".java",
+    "course",
+    "folder",
+    "source",
+    "sources",
+    "lecture",
+    "lectures",
+    "slides",
+    "past-year",
+    "past year",
 )
 DELEGATED_EXERCISE_COMMANDS: Final = (
     '$study-forge index "C:\\\\Course"',
@@ -104,6 +149,15 @@ OPT_OUT_EXERCISE_COMMANDS: Final = (
     '$study-forge distill lecture.pdf; user says "local only"',
     '$study-forge artifact past-year "C:\\\\Course"; user says "no subagents"',
     '$study-forge index "C:\\\\Course"; user says "no delegation"',
+    '$study-forge map "C:\\\\Course"; user says "do not use subagents"',
+    '$study-forge trace "C:\\\\Course"; user says "do not delegate"',
+    '$study-forge drill slides.pdf; user says "don\'t use subagents"',
+    '$study-forge mark answers.pdf; user says "without subagents"',
+)
+LOCAL_EXERCISE_COMMANDS: Final = (
+    "$study-forge explain one term",
+    '$study-forge trace "what is BFS?"',
+    '$study-forge rescue "I have 2 hours"',
 )
 
 
@@ -262,8 +316,10 @@ def decide_hook(command: str) -> HookDecision:
     lowered = command.casefold()
     if any(phrase in lowered for phrase in HOOK_OPT_OUT_PHRASES):
         return HookDecision(command, False, None, "user restricts tool use")
-    if any(pattern in lowered for pattern in SOURCE_HEAVY_COMMAND_PATTERNS):
+    if any(pattern in lowered for pattern in INHERENTLY_SOURCE_HEAVY_COMMAND_PATTERNS):
         return HookDecision(command, True, HOOK_AUTHORIZATION_SENTENCE, "source-heavy Study Forge command")
+    if any(pattern in lowered for pattern in SOURCE_SCOPED_STUDY_COMMAND_PATTERNS) and any(hint in lowered for hint in SOURCE_SCOPE_HINTS):
+        return HookDecision(command, True, HOOK_AUTHORIZATION_SENTENCE, "source-scoped Study Forge command")
     return HookDecision(command, False, None, "not a source-heavy Study Forge command")
 
 
@@ -368,7 +424,8 @@ def run_self_test() -> int:
         hook_ok = expect_hook_decision(command, True) and hook_ok
     for command in OPT_OUT_EXERCISE_COMMANDS:
         hook_ok = expect_hook_decision(command, False) and hook_ok
-    hook_ok = expect_hook_decision("$study-forge explain one term", False) and hook_ok
+    for command in LOCAL_EXERCISE_COMMANDS:
+        hook_ok = expect_hook_decision(command, False) and hook_ok
     if not hook_ok:
         return 1
     with tempfile.TemporaryDirectory() as temp_dir:
