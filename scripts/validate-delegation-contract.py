@@ -4,7 +4,10 @@
 # ///
 # --- How to run ---
 # python scripts/validate-delegation-contract.py --self-test
+# python scripts/validate-delegation-contract.py --hook-exercise delegated
+# python scripts/validate-delegation-contract.py --hook-exercise opt-out
 # python scripts/validate-delegation-contract.py .
+# allow: SIZE_OK - single-file standard-library contract validator; splitting it would broaden this scoped hook change.
 
 from __future__ import annotations
 
@@ -65,6 +68,11 @@ READINESS_FILES: Final = (
 )
 FALLBACK_CLAIM_PHRASES: Final = ("independent verification", "independently verified", "independent_verified")
 FALLBACK_NEGATORS: Final = ("not independent", "not independently", "not present", "not claim", "not call", "cannot be called", "must not")
+HOOK_AUTHORIZATION_SENTENCE: Final = (
+    "The user explicitly authorizes Study Forge to use OMO-style subagent delegation lanes for this source-heavy command "
+    "without second approval."
+)
+OPT_OUT_TOKENS: Final = ("local only", "no subagents", "no delegation", "restricts tool use")
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,7 +95,7 @@ class FixtureCase:
 
 
 def usage() -> str:
-    return "usage: scripts/validate-delegation-contract.py <repo-root> | --self-test"
+    return "usage: scripts/validate-delegation-contract.py <repo-root> | --self-test | --hook-exercise <delegated|opt-out>"
 
 
 def parse_args(argv: Sequence[str]) -> CliArgs | Issue:
@@ -131,6 +139,7 @@ def check_delegation(root: Path, issues: list[Issue]) -> None:
     require_tokens(text, relative_path, REQUIRED_SECTIONS, issues)
     require_tokens(text, relative_path, PROMPT_TOKENS, issues)
     require_tokens(text, relative_path, SHARED_TOKENS, issues)
+    require_tokens(text, relative_path, (HOOK_AUTHORIZATION_SENTENCE, *OPT_OUT_TOKENS), issues)
 
 
 def check_skill_routing(root: Path, issues: list[Issue]) -> None:
@@ -139,7 +148,14 @@ def check_skill_routing(root: Path, issues: list[Issue]) -> None:
     require_tokens(
         text,
         relative_path,
-        ("references/delegation.md", "source-heavy", "second user approval", "validates worker output"),
+        (
+            "references/delegation.md",
+            "source-heavy",
+            "second user approval",
+            "validates worker output",
+            HOOK_AUTHORIZATION_SENTENCE,
+            *OPT_OUT_TOKENS,
+        ),
         issues,
     )
 
@@ -209,9 +225,13 @@ def write_file(root: Path, relative_path: str, content: str) -> None:
 
 
 def write_valid_fixture(root: Path) -> None:
-    delegation = "\n".join((*REQUIRED_SECTIONS, *PROMPT_TOKENS, *SHARED_TOKENS, "second user approval"))
+    hook_line = (
+        f"{HOOK_AUTHORIZATION_SENTENCE} If the user says local only, no subagents, no delegation, "
+        "or otherwise restricts tool use, record fallback_local instead."
+    )
+    delegation = "\n".join((*REQUIRED_SECTIONS, *PROMPT_TOKENS, *SHARED_TOKENS, "second user approval", hook_line))
     write_file(root, "skills/references/delegation.md", delegation)
-    write_file(root, "skills/SKILL.md", "references/delegation.md source-heavy second user approval validates worker output")
+    write_file(root, "skills/SKILL.md", f"references/delegation.md source-heavy second user approval validates worker output {hook_line}")
     for relative_path, tokens in COMMAND_REQUIREMENTS.items():
         write_file(root, relative_path, " ".join(tokens))
     safe_line = "fallback_local is not independent verification; do not wait for a second user approval."
@@ -242,6 +262,18 @@ def require_approval(root: Path) -> None:
     write_file(root, "skills/SKILL.md", "references/delegation.md source-heavy validates worker output ask user approval before spawning")
 
 
+def remove_hook_authorization(root: Path) -> None:
+    write_file(
+        root,
+        "skills/SKILL.md",
+        "references/delegation.md source-heavy second user approval validates worker output local only no subagents no delegation user restricts tool use fallback_local",
+    )
+
+
+def remove_opt_out(root: Path) -> None:
+    write_file(root, "skills/SKILL.md", f"references/delegation.md source-heavy second user approval validates worker output {HOOK_AUTHORIZATION_SENTENCE}")
+
+
 def expect_issue(case: FixtureCase) -> bool:
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)
@@ -262,6 +294,8 @@ def run_self_test() -> int:
         FixtureCase("missing-worker-prompt-shape", remove_prompt_shape, "missing required token: TASK:"),
         FixtureCase("fallback-local-claimed-independent", claim_fallback_independent, "fallback_local claimed"),
         FixtureCase("approval-before-spawn", require_approval, "requires second user approval"),
+        FixtureCase("missing-hook-authorization", remove_hook_authorization, f"missing required token: {HOOK_AUTHORIZATION_SENTENCE}"),
+        FixtureCase("missing-opt-out-coverage", remove_opt_out, "missing required token: local only"),
     )
     if not all(expect_issue(case) for case in cases):
         return 1
@@ -277,6 +311,30 @@ def run_self_test() -> int:
     return 0
 
 
+def print_hook_exercise(kind: str) -> int:
+    if kind == "delegated":
+        for command in (
+            '$study-forge index "C:\\\\Course"',
+            '$study-forge source-index "C:\\\\Course"',
+            '$study-forge artifact past-year "C:\\\\Course"',
+            '$study-forge distill "C:\\\\Course\\\\Lecture"',
+            '$study-forge map "C:\\\\Course"',
+            '$study-forge sheet "C:\\\\Course"',
+        ):
+            print(f"HOOK_EXERCISE route=delegated command={command} delegate=true")
+            print(f"authorization={HOOK_AUTHORIZATION_SENTENCE}")
+            print("context=fork_context:false")
+        return 0
+    if kind == "opt-out":
+        for phrase in ("local only", "no subagents", "no delegation"):
+            print(f'HOOK_EXERCISE route=opt-out command=$study-forge distill lecture.pdf; user says "{phrase}" delegate=false')
+            print("authorization=not applied because user restricts tool use")
+            print("context=fork_context:false")
+        return 0
+    print_result((Issue("--hook-exercise", f"unsupported hook exercise: {kind}"),))
+    return 2
+
+
 def print_result(issues: Sequence[Issue]) -> None:
     if not issues:
         print("PASS delegation contract")
@@ -287,6 +345,12 @@ def print_result(issues: Sequence[Issue]) -> None:
 
 
 def main(argv: Sequence[str]) -> int:
+    if argv and argv[0] == "--hook-exercise":
+        if len(argv) != 2:
+            print(usage())
+            print_result((Issue("--hook-exercise", "expected hook exercise: delegated or opt-out"),))
+            return 2
+        return print_hook_exercise(argv[1])
     args = parse_args(argv)
     if isinstance(args, Issue):
         print(usage())
