@@ -2,12 +2,12 @@
 # /// script
 # requires-python = ">=3.12"
 # ///
+# noqa: SIZE_OK - single-file standard-library contract validator; splitting it would broaden this scoped hook check.
 # --- How to run ---
 # python scripts/validate-delegation-contract.py --self-test
 # python scripts/validate-delegation-contract.py --hook-exercise delegated
 # python scripts/validate-delegation-contract.py --hook-exercise opt-out
 # python scripts/validate-delegation-contract.py .
-# allow: SIZE_OK - single-file standard-library contract validator; splitting it would broaden this scoped hook change.
 
 from __future__ import annotations
 
@@ -73,6 +73,38 @@ HOOK_AUTHORIZATION_SENTENCE: Final = (
     "without second approval."
 )
 OPT_OUT_TOKENS: Final = ("local only", "no subagents", "no delegation", "restricts tool use")
+HOOK_OPT_OUT_PHRASES: Final = ("local only", "no subagents", "no delegation", "stay local")
+SOURCE_HEAVY_COMMAND_PATTERNS: Final = (
+    "$study-forge index",
+    "$study-forge source-index",
+    "$study-forge artifact",
+    "$study-forge distill",
+    "$study-forge map",
+    "$study-forge sheet",
+    "$study-forge deconstruct",
+    "$study-forge trace",
+    "$study-forge drill",
+    "$study-forge mark",
+    "$study-forge rescue",
+)
+DELEGATED_EXERCISE_COMMANDS: Final = (
+    '$study-forge index "C:\\\\Course"',
+    '$study-forge source-index "C:\\\\Course"',
+    '$study-forge artifact past-year "C:\\\\Course"',
+    '$study-forge distill "C:\\\\Course\\\\Lecture"',
+    '$study-forge map "C:\\\\Course"',
+    '$study-forge sheet "C:\\\\Course"',
+    '$study-forge deconstruct "C:\\\\Course"',
+    '$study-forge trace "C:\\\\Course"',
+    '$study-forge drill "C:\\\\Course"',
+    '$study-forge mark "C:\\\\Course"',
+    '$study-forge rescue "C:\\\\Course"',
+)
+OPT_OUT_EXERCISE_COMMANDS: Final = (
+    '$study-forge distill lecture.pdf; user says "local only"',
+    '$study-forge artifact past-year "C:\\\\Course"; user says "no subagents"',
+    '$study-forge index "C:\\\\Course"; user says "no delegation"',
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,6 +124,14 @@ class FixtureCase:
     label: str
     mutate: Callable[[Path], None]
     expected: str
+
+
+@dataclass(frozen=True, slots=True)
+class HookDecision:
+    command: str
+    delegate: bool
+    authorization: str | None
+    reason: str
 
 
 def usage() -> str:
@@ -218,6 +258,30 @@ def validate(root: Path) -> tuple[Issue, ...]:
     return tuple(issues)
 
 
+def decide_hook(command: str) -> HookDecision:
+    lowered = command.casefold()
+    if any(phrase in lowered for phrase in HOOK_OPT_OUT_PHRASES):
+        return HookDecision(command, False, None, "user restricts tool use")
+    if any(pattern in lowered for pattern in SOURCE_HEAVY_COMMAND_PATTERNS):
+        return HookDecision(command, True, HOOK_AUTHORIZATION_SENTENCE, "source-heavy Study Forge command")
+    return HookDecision(command, False, None, "not a source-heavy Study Forge command")
+
+
+def expect_hook_decision(command: str, expected_delegate: bool) -> bool:
+    decision = decide_hook(command)
+    if decision.delegate != expected_delegate:
+        print(f"FAIL hook decision command={command} expected_delegate={expected_delegate} reason={decision.reason}")
+        return False
+    if decision.delegate and decision.authorization != HOOK_AUTHORIZATION_SENTENCE:
+        print(f"FAIL hook decision command={command} missing authorization")
+        return False
+    if not decision.delegate and decision.authorization is not None:
+        print(f"FAIL hook decision command={command} applied authorization during local route")
+        return False
+    print(f"SELF-TEST HOOK command={command} delegate={str(decision.delegate).lower()}: PASS")
+    return True
+
+
 def write_file(root: Path, relative_path: str, content: str) -> None:
     path = root / relative_path
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -299,6 +363,14 @@ def run_self_test() -> int:
     )
     if not all(expect_issue(case) for case in cases):
         return 1
+    hook_ok = True
+    for command in DELEGATED_EXERCISE_COMMANDS:
+        hook_ok = expect_hook_decision(command, True) and hook_ok
+    for command in OPT_OUT_EXERCISE_COMMANDS:
+        hook_ok = expect_hook_decision(command, False) and hook_ok
+    hook_ok = expect_hook_decision("$study-forge explain one term", False) and hook_ok
+    if not hook_ok:
+        return 1
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)
         write_valid_fixture(root)
@@ -311,28 +383,35 @@ def run_self_test() -> int:
     return 0
 
 
+def print_hook_decision(decision: HookDecision) -> None:
+    route = "delegated" if decision.delegate else "opt-out"
+    print(f"HOOK_EXERCISE route={route} command={decision.command} delegate={str(decision.delegate).lower()}")
+    if decision.authorization is None:
+        print(f"authorization=not applied because {decision.reason}")
+    else:
+        print(f"authorization={decision.authorization}")
+    print("context=fork_context:false")
+
+
 def print_hook_exercise(kind: str) -> int:
     if kind == "delegated":
-        for command in (
-            '$study-forge index "C:\\\\Course"',
-            '$study-forge source-index "C:\\\\Course"',
-            '$study-forge artifact past-year "C:\\\\Course"',
-            '$study-forge distill "C:\\\\Course\\\\Lecture"',
-            '$study-forge map "C:\\\\Course"',
-            '$study-forge sheet "C:\\\\Course"',
-        ):
-            print(f"HOOK_EXERCISE route=delegated command={command} delegate=true")
-            print(f"authorization={HOOK_AUTHORIZATION_SENTENCE}")
-            print("context=fork_context:false")
-        return 0
-    if kind == "opt-out":
-        for phrase in ("local only", "no subagents", "no delegation"):
-            print(f'HOOK_EXERCISE route=opt-out command=$study-forge distill lecture.pdf; user says "{phrase}" delegate=false')
-            print("authorization=not applied because user restricts tool use")
-            print("context=fork_context:false")
-        return 0
-    print_result((Issue("--hook-exercise", f"unsupported hook exercise: {kind}"),))
-    return 2
+        commands = DELEGATED_EXERCISE_COMMANDS
+        expected_delegate = True
+    elif kind == "opt-out":
+        commands = OPT_OUT_EXERCISE_COMMANDS
+        expected_delegate = False
+    else:
+        print_result((Issue("--hook-exercise", f"unsupported hook exercise: {kind}"),))
+        return 2
+    exit_code = 0
+    for command in commands:
+        decision = decide_hook(command)
+        if decision.delegate != expected_delegate:
+            print_result((Issue(command, f"hook decision mismatch: {decision.reason}"),))
+            exit_code = 1
+            continue
+        print_hook_decision(decision)
+    return exit_code
 
 
 def print_result(issues: Sequence[Issue]) -> None:
