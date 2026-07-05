@@ -12,6 +12,12 @@ For course folders or known local source sets, look for a fresh `.study-forge/so
 
 Use fallback to source PDFs, slides, screenshots, notebooks, code, or other original files when the manifest is missing, hashes are stale, the needed page/topic is missing, visual interpretation is low-confidence, the pack records a `Source gap`, the page is `Unreadable`, a verifier challenge disputes the pack, or a spot check is needed. If no fresh pack exists, inspect the original sources directly before compressing material into an exam-specific sheet.
 
+## Delegation Routing
+
+Use `skills/references/delegation.md` for worker routing. For broad folder, multi-document, or PDF-heavy sheets, delegate `source_research` to gather high-confidence definitions, formulas, comparisons, diagrams, traps, locators, and gaps before compression. For correctness-sensitive formulas, conflicting sources, grading-sensitive wording, or high-stakes sheets, add `verifier`; use `final_reviewer` when the sheet will be reused outside chat or feed a durable artifact.
+
+Generated or reusable sheets, especially HTML/PDF/printable surfaces, need `qa_executor` to inspect the rendered output, source basis, links, placeholders, and self-test behavior. One small source can stay local as a `local-small-source` fallback, and no-source sheets must be labeled general. If a required delegated lane cannot run, label the result `fallback_local` and name the missing lane.
+
 ## Workflow
 
 1. Inspect the source.

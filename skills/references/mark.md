@@ -12,6 +12,12 @@ For course folders or known local source sets, look for a fresh `.study-forge/so
 
 Use fallback to source PDFs, marking schemes, rubrics, past papers, slides, or other original files when the manifest is missing, hashes are stale, the needed page/topic is missing, visual interpretation is low-confidence, the pack records a `Source gap`, the page is `Unreadable`, a verifier challenge disputes the pack, or a spot check is needed. If no fresh pack exists, inspect available marking sources directly before grading; only use general examiner judgment when no source material exists.
 
+## Delegation Routing
+
+Follow the shared contract in `skills/references/delegation.md`. For mark-heavy answers, multiple submissions, broad rubrics, past-paper sets, or grading that depends on several source files, use `source_research` to gather expected points, lecturer wording, marking locators, confidence, and gaps before assigning marks. Use `verifier` for correctness-sensitive grading, disputed marks, high-stakes feedback, or any answer where the score could materially change; use `qa_executor` when marks feed a reusable report, ledger, workbook, or exported artifact.
+
+Keep one small answer against one small marking source local. If no marking source exists, label the score as general examiner judgment; if a warranted lane cannot run, label the degraded pass `fallback_local`. This is the local-small-source fallback and cannot be called independent verification.
+
 ## Workflow
 
 1. Identify the expected answer points.

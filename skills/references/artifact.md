@@ -20,6 +20,12 @@ Use fallback to source PDFs, slides, screenshots, notebooks, code, or other orig
 
 For `artifact past-year`, preserve the proof plane: `answer-ledger.json` remains the canonical answer source for HTML rendering and QA summaries. The source-pack can feed source evidence, topic-source fit, locators, stale-hash decisions, source gaps, and unreadable-page notes, but it must not replace the answer ledger.
 
+## Delegation Routing
+
+Use `skills/references/delegation.md` for worker routing. For a broad course folder, many documents, or artifact planning that needs source discovery, delegate a `source_research` lane before drafting. For any generated or reusable artifact surface, run `qa_executor` on the rendered file, proof docs, counts, links, and visible Source Basis/Scope Boundaries before claiming readiness.
+
+For `artifact past-year`, grading-sensitive artifacts, conflicting sources, or correctness claims that the student will rely on, add `verifier` lanes and use `final_reviewer` when final readiness wording, evidence policy, or durable artifact quality needs an independent last pass. A one-small-source artifact may stay local as a `local-small-source` fallback when the source is simple and low-risk. If a required lane cannot run, record `fallback_local` or `fallback_local_reviewed` per the delegation contract and keep the degraded state visible in QA notes, the artifact when practical, and the final response.
+
 ## Modes
 
 - `atlas`: default mode; build a self-contained revision atlas from the source, with topic sections that teach the material directly, not a dashboard that mainly sends the student back to source PDFs.

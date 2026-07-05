@@ -8,6 +8,12 @@ For course folders or known local source sets, look for a fresh `.study-forge/so
 
 Use fallback to source PDFs, syllabuses, briefs, rubrics, slides, past papers, or other original files when the manifest is missing, hashes are stale, the needed page/topic is missing, visual interpretation is low-confidence, the pack records a `Source gap`, the page is `Unreadable`, a verifier challenge disputes the pack, or a spot check is needed. If no fresh pack exists, inspect the original source files directly before ranking Required, Optional, or Skip.
 
+## Delegation Routing
+
+Use `skills/references/delegation.md` for worker routing. For broad folder maps, many documents, multiple authority sources, or past-paper sets, delegate `source_research` to inventory sources, locate topic evidence, and identify gaps before ranking Required, Optional, or Skip. For high-stakes scope decisions, conflicting authorities, sample-answer disagreements, or correctness-sensitive coverage claims, add `verifier`; use `final_reviewer` when the map will drive a durable study plan or generated artifact.
+
+One small source can stay local as a `local-small-source` fallback. If a required delegated lane cannot run, label the map `fallback_local` and name the lane that was replaced by local review. When the map becomes or feeds a generated/reusable artifact, route that artifact through `qa_executor`.
+
 ## Workflow
 
 1. Inspect available source files before ranking.

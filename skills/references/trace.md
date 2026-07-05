@@ -12,6 +12,12 @@ For course folders or known local source sets, look for a fresh `.study-forge/so
 
 Use fallback to original PDFs, slides, screenshots, notebooks, code, SQL, diagrams, or other source files when the manifest is missing, hashes are stale, the needed record is missing, visual interpretation is low-confidence, the pack records a `Source gap`, the page is `Unreadable`, a verifier challenge disputes the pack, or a spot check is needed. Do not rebuild or reindex here; inspect original sources and recommend `$study-forge index <course-folder>` when useful. Original course files remain authority.
 
+## Delegation Routing
+
+Follow the shared contract in `skills/references/delegation.md`. For broad code, notebook, SQL, diagram, protocol, or multi-source traces, use `source_research` to inspect the source set and map exact rules, inputs, locators, confidence, and gaps before tracing. Add `verifier` for correctness-sensitive traces, grading, tricky state transitions, or code/notebook outputs where the final result matters; use `qa_executor` when trace output feeds `artifact trace-lab`, a notebook, an export, or another reusable proof surface.
+
+Keep one small snippet, one diagram, or one concept trace local and label no-source explanations as general. If a warranted worker lane cannot run, record `fallback_local`; this is the local-small-source fallback and is not independent verification.
+
 ## Workflow
 
 1. State the initial state and inputs.

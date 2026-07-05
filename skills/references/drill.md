@@ -8,6 +8,12 @@ For course folders or known local source sets, look for a fresh `.study-forge/so
 
 Use fallback to original PDFs, slides, screenshots, notebooks, code, or other source files when the manifest is missing, hashes are stale, the needed record is missing, visual interpretation is low-confidence, the pack records a `Source gap`, the page is `Unreadable`, a verifier challenge disputes the pack, or a spot check is needed. Do not rebuild or reindex here; inspect original sources and recommend `$study-forge index <course-folder>` when useful. Original course files remain authority.
 
+## Delegation Routing
+
+Follow the shared contract in `skills/references/delegation.md`. For broad source sets, course-folder practice planning, past-paper sets, or drill output that will feed `artifact drill-pack`, use `source_research` to map examinable topics, source-backed traps, likely question forms, locators, confidence, and gaps. Add `verifier` when the answer key, scoring basis, or weak-area diagnosis is correctness-sensitive; use `qa_executor` when a reusable drill-pack, ledger, or exported practice artifact must be inspected.
+
+Keep one small source, one concept, or a short oral drill local and label no-source guidance as general. If a warranted lane cannot run, label the pass `fallback_local`; this is the local-small-source fallback and must remain visible.
+
 ## Workflow
 
 1. Use source material when available.

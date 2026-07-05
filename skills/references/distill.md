@@ -12,6 +12,12 @@ For course folders or known local source sets, look for a fresh `.study-forge/so
 
 Use fallback to source PDFs, slides, screenshots, or original files when the manifest is missing, hashes are stale, the needed page/topic is missing, visual interpretation is low-confidence, the pack records a `Source gap`, the page is `Unreadable`, a verifier challenge disputes the pack, or a spot check is needed. If no fresh pack exists, inspect the original sources directly before ranking or explaining the material.
 
+## Delegation Routing
+
+Use `skills/references/delegation.md` for worker routing. For broad folder, multi-document, or PDF-heavy distillation, delegate `source_research` to map source basis, high-yield signals, locators, confidence, and gaps before synthesizing. For correctness-sensitive, high-stakes, or conflicting source claims, add `verifier`; use `final_reviewer` when the distilled output will anchor a reusable artifact, proof note, or final study plan.
+
+One small source can stay local as a `local-small-source` fallback. If no source exists, answer only as a clearly labeled general explanation, not an exam-specific distill. If a required delegated lane cannot run, label the result `fallback_local` and name the missing independent lane before presenting the output. When distill output feeds a generated or reusable artifact, that artifact still needs `qa_executor`.
+
 ## Workflow
 
 1. Identify the chapter/topic and source files inspected.

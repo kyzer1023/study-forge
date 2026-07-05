@@ -11,9 +11,17 @@ The command builds a reusable semantic source-pack for a course folder. Original
 1. Run `studyforge-indexer` lanes first. For PDF-heavy or multi-source folders, assign each in-scope file, coherent file bundle, or large-PDF page range to an indexer lane instead of letting the main agent produce a single-agent baseline. Use topics as output from the index, not as the primary sharding key; topic boundaries are discovered after extraction.
 2. Run an independent `studyforge-verifier` invocation with lane `source_index` after the indexer handoff. The verifier challenges source inventory, freshness, page accounting, visual interpretation, confidence labels, topic coverage, and downstream fallback behavior.
 
+Follow the shared contract in `skills/references/delegation.md`. The agent decides whether the source scope warrants subagents. PDF-heavy or multi-source folders normally warrant independent `indexer` and `verifier` lanes plus a `source_index` verification lane; do not wait for a second user approval when the active runtime can spawn workers.
+
+Use lane names precisely. `indexer` builds or refreshes source-pack records, `source_index` challenges source-pack inventory and freshness, and `verifier` checks readiness, evidence quality, and downstream fallback behavior. Use `qa_executor` to validate reusable pack files, generated proof surfaces, and reconciliation counts. Use `final_reviewer` when a source-pack or related contract change will be relied on outside chat. If an index run is feeding a later artifact, use `source_research` only to map that artifact's source basis after or alongside pack readiness; do not substitute it for `indexer` or `source_index`.
+
+Source-controlled TOMLs in `agents/` are role definitions, not live Codex custom agents by themselves. Treat TOML-backed role routing as unverified unless the active subagent tool exposes those roles. If it does not, spawn normal workers with self-contained prompts that paste the relevant lane instructions from `skills/references/studyforge-indexer.md` or `skills/references/studyforge-verifier.md`.
+
 Do not call a source-pack ready, broadly reusable, or `subagent-verified` until the `source_index` verifier lane has run and its material findings are fixed or recorded as source gaps.
 
 If subagent tools or TOML-backed roles are unavailable, run the same checks as fallback local passes, label them `fallback_local`, set the pack status to `baseline_unverified` or `usable_with_recorded_gaps`, and do not call it `subagent-verified`.
+
+For a one-small-source or concept request that does not need a reusable source-pack, keep the work local instead of turning it into a broad index run. Label non-source-backed guidance as general, label degraded required-lane checks as `fallback_local`, and call this the local-small-source fallback; do not present it as `indexer`, `source_index`, `verifier`, or independent verification.
 
 Record the execution mode in `pack-verification.json`: indexer lanes run, verifier lanes run, fallback lanes, lane status, and unresolved findings. A main-agent-only pack may be useful for orientation, but it is only a baseline source-pack until an independent verifier lane challenges it.
 
