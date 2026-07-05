@@ -11,7 +11,9 @@ The command builds a reusable semantic source-pack for a course folder. Original
 1. Run `studyforge-indexer` lanes first. For PDF-heavy or multi-source folders, assign each in-scope file, coherent file bundle, or large-PDF page range to an indexer lane instead of letting the main agent produce a single-agent baseline. Use topics as output from the index, not as the primary sharding key; topic boundaries are discovered after extraction.
 2. Run an independent `studyforge-verifier` invocation with lane `source_index` after the indexer handoff. The verifier challenges source inventory, freshness, page accounting, visual interpretation, confidence labels, topic coverage, and downstream fallback behavior.
 
-Do not call a source-pack `subagent-verified`, `ready`, or broadly reusable until the `source_index` verifier lane has run and its material findings are fixed or recorded as source gaps. If subagent tools or TOML-backed roles are unavailable, run the same checks as fallback local passes, label them `fallback_local`, and set the pack status to `baseline_unverified` or `usable_with_recorded_gaps`, not `subagent-verified`.
+Do not call a source-pack ready, broadly reusable, or `subagent-verified` until the `source_index` verifier lane has run and its material findings are fixed or recorded as source gaps.
+
+If subagent tools or TOML-backed roles are unavailable, run the same checks as fallback local passes, label them `fallback_local`, set the pack status to `baseline_unverified` or `usable_with_recorded_gaps`, and do not call it `subagent-verified`.
 
 Record the execution mode in `pack-verification.json`: indexer lanes run, verifier lanes run, fallback lanes, lane status, and unresolved findings. A main-agent-only pack may be useful for orientation, but it is only a baseline source-pack until an independent verifier lane challenges it.
 

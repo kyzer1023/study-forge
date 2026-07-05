@@ -18,6 +18,7 @@ Do not create separate verifier TOMLs per lane. If the TOML is not installed in 
 - Fail closed. Unsupported answers become `Source gap`; unreadable questions, diagrams, or tables become `Unreadable` until extraction is repaired.
 - Check the proof plane and the learner plane for drift: `answer-ledger.json`, verifier reports, QA reports, and HTML/artifact output must describe the same questions and statuses.
 - Do not claim true subagent verification unless the check really ran as an independent verifier invocation. Local fallback checks must be labeled as fallback.
+- When running as a verifier child, return lane findings only. The parent is responsible for adding child identity, raw child report path, parent validation, invocation mode, and tooling preflight metadata.
 - Keep the verifier role separate from `studyforge-indexer`: the indexer creates or refreshes source-pack records, while this role challenges the completed pack and reports defects.
 
 ## Lane Checklists
@@ -70,7 +71,9 @@ Do not create separate verifier TOMLs per lane. If the TOML is not installed in 
 
 ## Output Schema
 
-Return one report using this schema. Use `PASS`, `MAJOR`, or `BLOCKING` for `status`. Use `question_id: null` for whole-paper, whole-artifact, or whole-pack findings; a pack-level id such as `"source_pack"` is also allowed for `source_index` findings.
+### Child Lane Report
+
+A verifier child returns lane findings only. Return one child lane report using this schema. Use `PASS`, `MAJOR`, or `BLOCKING` for `status`. Use `question_id: null` for whole-paper, whole-artifact, or whole-pack findings; a pack-level id such as `"source_pack"` is also allowed for `source_index` findings.
 
 ```json
 {
@@ -91,3 +94,48 @@ Return one report using this schema. Use `PASS`, `MAJOR`, or `BLOCKING` for `sta
 ```
 
 For `PASS`, include at least one finding that names the checked scope in `evidence` and uses `"required_fix": null`. For `MAJOR` or `BLOCKING`, every finding must have a non-empty `required_fix`.
+
+Do not invent or fill parent orchestration metadata in the child report. The child report must not claim `independent_verified`, `subagent-verified`, or true subagent verification unless the child is actually running as an independent invocation.
+
+### Parent Durable Report Wrapper
+
+The parent is responsible for wrapping child lane output into a durable verifier report after it validates the raw child result. A parent-produced verifier report has exactly these top-level fields:
+
+- `invocation_mode`
+- `lane`
+- `status`
+- `findings`
+- `child_agent_id`
+- `child_thread_id`
+- `raw_child_report_path`
+- `parent_validated`
+- `tooling_preflight`
+
+```json
+{
+  "invocation_mode": "independent_subagent | fallback_local | baseline_unverified",
+  "lane": "source_index | extraction | coverage | evidence | correctness | learner_surface",
+  "status": "PASS | MAJOR | BLOCKING",
+  "findings": [
+    {
+      "status": "PASS | MAJOR | BLOCKING",
+      "lane": "source_index | extraction | coverage | evidence | correctness | learner_surface",
+      "question_id": "string, pack-level id, or null",
+      "evidence": "Specific source, ledger, artifact, or verifier-report observation that supports the finding.",
+      "required_fix": "Concrete fix required before the item can be called ready, or null for PASS findings."
+    }
+  ],
+  "child_agent_id": "string or null",
+  "child_thread_id": "string or null",
+  "raw_child_report_path": "string path or null",
+  "parent_validated": true,
+  "tooling_preflight": {
+    "available": true,
+    "checked_at": "ISO-8601 timestamp or null",
+    "tools": ["spawn_agent", "wait_agent", "close_agent"],
+    "fallback_reason": "string or null"
+  }
+}
+```
+
+For `invocation_mode: "independent_subagent"`, `child_agent_id`, `child_thread_id`, and `raw_child_report_path` must be non-empty and `parent_validated` must become `true` only after the parent confirms the child output matches the requested lane and schema. For `invocation_mode: "fallback_local"`, child identity fields stay `null`, `tooling_preflight` records why independent tooling was unavailable or not used, and the parent must not present the result as independently verified.

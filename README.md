@@ -127,9 +127,19 @@ C:\Dev\study-forge\skills
 
 `$study-forge index` uses the source-controlled indexer role in `agents/studyforge-indexer.toml` plus the workflow in `skills/references/studyforge-indexer.md`. `artifact past-year` and source-pack readiness checks use the verifier role in `agents/studyforge-verifier.toml` and the lane instructions in `skills/references/studyforge-verifier.md`.
 
-The optional Codex agent install paths are `C:\Users\kyzer\.codex\agents\studyforge-indexer.toml` and `C:\Users\kyzer\.codex\agents\studyforge-verifier.toml`. Do not install them globally unless the user asks for that install; normal Study Forge docs, artifact work, and verification passes should not copy files into `C:\Users\kyzer\.codex\agents`.
+The TOML roles are optional installs. The optional Codex agent install paths are `C:\Users\kyzer\.codex\agents\studyforge-indexer.toml` and `C:\Users\kyzer\.codex\agents\studyforge-verifier.toml`. Do not install them globally unless the user asks for that install; normal Study Forge docs, artifact work, and verification passes should not copy files into `C:\Users\kyzer\.codex\agents`.
 
-Fallback when a TOML is not installed: spawn a normal subagent or worker for the needed lane, then paste the relevant lane instructions from `skills/references/studyforge-indexer.md` or `skills/references/studyforge-verifier.md`. Label fallback checks as `fallback_local`; do not claim `subagent-verified` status unless an independent subagent or installed role actually ran.
+Fallback when a TOML is not installed: spawn a normal subagent or worker for the needed lane, then paste the relevant lane instructions from `skills/references/studyforge-indexer.md` or `skills/references/studyforge-verifier.md`.
+
+Verifier readiness states:
+
+- `independent_verified`: an independent subagent or installed verifier role ran the required lanes.
+- `fallback_local_reviewed`: the role was unavailable after preflight, so copied lane instructions were run as separate local passes. This is degraded.
+- `baseline_unverified`: verifier preflight or required lane results are missing.
+
+For `artifact past-year`, use copied verifier instructions only as the normal-subagent fallback path, keep the degraded state visible, and escalate or rerun if multi-agent tooling is discovered late.
+
+A local pass is not `subagent-verified`.
 
 ## Design Principles
 

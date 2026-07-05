@@ -93,7 +93,7 @@ Strict pipeline:
 2. Extraction: create `question-inventory.json` with every detected paper, question, subpart, mark value, table, diagram, and instruction. If extraction is messy, preserve the best faithful text and mark the affected item `Unreadable` when the source cannot be read reliably.
 3. Source index: create `source-index.json` from current lecture/source material with topics, definitions, algorithms, formulas, examples, diagrams, lecturer wording, page/slide locators, and syllabus/source-fit notes. When an explicit syllabus file is unavailable, treat the current lecture/source pack as the syllabus authority and record that assumption in `source-inventory.json`, `source-index.json`, and `qa-report.json`.
 4. Answer ledger: create `answer-ledger.json` as the canonical source of truth for all answers, gaps, verifier findings, and rendered anchors.
-5. Verifier lanes: run the single `studyforge-verifier` as lane-specific checks for extraction, coverage, evidence, correctness, and learner surface. Store detailed results under `verifier-reports/`.
+5. Verifier preflight and lanes: before finalization, check whether the installed `studyforge-verifier` role or Codex multi-agent worker tooling is available, then run lane-specific checks for extraction, coverage, evidence, correctness, and learner surface. Store detailed results under `verifier-reports/`.
 6. Fixes and source gaps: fix every `BLOCKING` or `MAJOR` verifier finding that the course sources can support. Unsupported answers must become `Source gap`; unreadable questions, pages, tables, or diagrams must become `Unreadable`.
 7. HTML render: render the learner artifact from `answer-ledger.json`. Keep it self-contained and exam-ready, with compact source basis, coverage/source gaps, and verifier status visible.
 8. QA: create `qa-report.json` recording render checks, question-count reconciliation, source-gap handling, verifier-lane status, source-pack-as-syllabus assumptions, and any remaining limitations.
@@ -158,6 +158,32 @@ Each rendered learner answer should include:
 - Common traps or examiner keywords when the source supports them.
 - Visible `Source gap` or `Unreadable` note when evidence or extraction is insufficient.
 
+#### Verifier Tooling Preflight
+
+For `past-year`, run verifier tooling/subagent preflight before finalizing the artifact. Check for an installed `studyforge-verifier` TOML first; if it is absent but Codex subagents are available, spawn a normal worker and paste the relevant verifier lane instructions from `skills/references/studyforge-verifier.md`.
+
+Minimum Codex invocation shape:
+
+```text
+multi_agent_v1.spawn_agent({message:"TASK: ... DELIVERABLE: ... SCOPE: ... VERIFY: ...", agent_type:"worker", fork_context:false})
+```
+
+Concrete lane template:
+
+```text
+multi_agent_v1.spawn_agent({message:"TASK: Run the Study Forge verifier lane <lane> for <course folder>. DELIVERABLE: A verifier report with PASS, BLOCKING, MAJOR, or NOT_RUN findings and required fixes. SCOPE: Raw course folder path, source-inventory.json, question-inventory.json, source-index.json, answer-ledger.json, relevant source files, and draft HTML only. VERIFY: Compare the lane evidence against source material and answer-ledger.json without private reasoning, intended answers, or leading conclusions.", agent_type:"worker", fork_context:false})
+```
+
+Record exactly one readiness state in `qa-report.json`, the visible Verifier Notes, and the final response:
+
+- `independent_verified`: all required verifier lanes ran through independent verifier subagents or the installed verifier role, and every `BLOCKING` finding was fixed or converted to `Source gap` / `Unreadable`.
+- `fallback_local_reviewed`: verifier tooling/subagent preflight was attempted, independent lanes could not run, and the same lanes were checked as separate local passes. This is degraded.
+- `baseline_unverified`: verifier preflight was not run, proof docs are incomplete, or verifier lane results are missing.
+
+Only `independent_verified` can support a normal readiness claim after blocking findings are resolved. The other states must remain visible in the artifact and final response, with unresolved limitations named.
+
+late discovery rule: if multi-agent tooling or the verifier role becomes available after local review began, rerun the affected verifier lanes through that tooling or escalate as blocked. Do not silently finish from local passes.
+
 #### Independent Verification Gate
 
 For `past-year`, use one `studyforge-verifier` with narrow verifier lanes before finalizing the artifact. Do not pass private reasoning, intended answers, or leading conclusions. Give each lane the raw course folder path, `source-inventory.json`, `question-inventory.json`, `source-index.json`, `answer-ledger.json`, relevant source paths, and the draft HTML render when checking learner surface.
@@ -194,7 +220,7 @@ Blocking conditions:
 - a sample answer or marking scheme contradicts the answer and the conflict is not explained
 - extraction dropped a material table, diagram, mark value, or instruction
 
-Do not call the artifact ready while any blocking finding remains. Fix major findings when possible; if the course sources cannot support a fix, change the ledger status to `Source gap` and name the missing evidence. If extraction is too damaged to trust, change the ledger status to `Unreadable` and name the unreadable source region. The final HTML must include a visible Verifier Notes section listing verifier lanes run, pass/fail status, unresolved source gaps, unreadable items, and which verifier lanes ran as independent subagent checks versus fallback local checks. If subagent tools are unavailable, run the same lanes as separate local passes and label the result as fallback verification, not subagent-verified.
+Do not call the artifact ready while any blocking finding remains. Fix major findings when possible; if the course sources cannot support a fix, change the ledger status to `Source gap` and name the missing evidence. If extraction is too damaged to trust, change the ledger status to `Unreadable` and name the unreadable source region. The final HTML must include a visible Verifier Notes section listing verifier lanes run, pass/fail status, unresolved source gaps, unreadable items, the readiness state, and which verifier lanes ran as independent subagent checks versus local review. After preflight, if independent tools remain unavailable, run the same lanes as separate local passes and label the readiness state as `fallback_local_reviewed`, not subagent-verified. The output is degraded.
 
 ### Formula-Lab
 
