@@ -112,8 +112,9 @@ SOURCE_SCOPED_STUDY_COMMAND_PATTERNS: Final = (
 )
 SOURCE_SCOPE_HINTS: Final = (
     ":\\\\",
+    ":/",
     "\\\\",
-    "/",
+    "://",
     ".study-forge",
     ".pdf",
     ".ppt",
@@ -158,6 +159,9 @@ LOCAL_EXERCISE_COMMANDS: Final = (
     "$study-forge explain one term",
     '$study-forge trace "what is BFS?"',
     '$study-forge rescue "I have 2 hours"',
+    '$study-forge trace "what is TCP/IP?"',
+    '$study-forge rescue "I have 2/3 hours"',
+    '$study-forge trace "BFS/DFS difference"',
 )
 
 
