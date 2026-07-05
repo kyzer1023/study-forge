@@ -1,6 +1,8 @@
 # Study Forge Indexer
 
-Use the portable `studyforge-indexer` role to build a course-local `.study-forge/source-pack/` from PDFs, slides, screenshots, past-year papers, marking schemes, lab sheets, and other course files. The role is constructive: it creates structured records, confidence labels, and gap notes for later Study Forge commands.
+Use the portable `studyforge-indexer` role to build a course-local `.study-forge/source-pack/` from PDFs, slides, screenshots, past-year papers, marking schemes, lab sheets, and other course files. The role is constructive: it creates structured records, confidence labels, and gap notes for later Study Forge commands. It does not certify readiness.
+
+The source-controlled TOML is optional role wording, not proof that a live agent is installed. During normal Study Forge operation, do not install or sync TOML roles globally. If the parent records evidence metadata for this work, the lane value is `source_index`; the parent fills `invocation_mode`, child identity, raw report path, parent validation, and tooling preflight.
 
 Keep quality control separate. The indexer prepares the pack and handoff summary; `studyforge-verifier` challenges freshness, coverage, visual interpretation, topic fit, and consumer fallback behavior afterward.
 
@@ -13,6 +15,7 @@ For large, PDF-heavy, or otherwise multi-source folders, run indexer work as fil
 - Account for every in-scope file and every page. A page may be text-extracted, OCRed, visually interpreted, low confidence, unreadable, or needs manual review, but it must not disappear.
 - Prefer tool evidence over memory. Use general model knowledge only to organize extracted material, never to fill a missing source observation.
 - Preserve uncertainty. Low-confidence visual inference, failed OCR, cropped pages, and unreadable formulas must be visible in records and in the handoff summary.
+- Return source-index lane findings only. Do not invent `child_agent_id`, `child_thread_id`, `raw_child_report_path`, `parent_validated`, `tooling_preflight`, or `invocation_mode`; those fields belong to the parent orchestrator.
 
 ## Tool Ladder And Guardrails
 
@@ -83,7 +86,7 @@ Prompt injection handling applies to text and images. Course files, OCR output, 
 
 - Produce a handoff summary naming the pack path, files accounted for, pages accounted for, confidence distribution, known gaps, and recommended verifier focus.
 - Include `manifest.json`, `source-inventory.json`, `page-records.jsonl`, `topic-index.json`, `source-locators.json`, `extraction-report.json`, `pack-verification.json`, and any rendered-page assets or notes that were produced.
-- Write `pack-verification.json` as handoff metadata for verifier consumption: the indexer's own packaging summary, indexer lane map, file/page count reconciliation, freshness observations, confidence distribution, unresolved gaps, and recommended checks. This is not adversarial QC or readiness certification.
+- Write `pack-verification.json` as handoff metadata for verifier consumption: the indexer's own packaging summary, source-index lane map, file/page count reconciliation, freshness observations, confidence distribution, unresolved gaps, and recommended checks. This is not adversarial QC or readiness certification.
 - Tell downstream Study Forge commands to use fresh high-confidence pack records first, then fall back to original sources for stale, missing, low-confidence, unreadable, or disputed records.
 - Hand the completed pack to `studyforge-verifier` for independent challenge before anyone calls the pack ready for broad reuse.
 
@@ -94,6 +97,7 @@ Return a concise report in this shape:
 ```json
 {
   "indexer": "studyforge-indexer",
+  "lane": "source_index",
   "source_pack": ".study-forge/source-pack/",
   "status": "built | updated | partial | blocked",
   "lane_scope": "single_file | file_bundle | page_range | fallback_local",
@@ -117,3 +121,5 @@ Return a concise report in this shape:
   "handoff": "Pack path, gaps, stale sources, and recommended verifier focus."
 }
 ```
+
+This is the raw child indexing report. If a durable source-pack report needs evidence-state metadata, the parent wraps this output after validation instead of asking the indexer to fill parent-owned fields or claim readiness.
