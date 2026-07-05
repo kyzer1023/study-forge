@@ -285,7 +285,7 @@ def expect_hook_decision(command: str, expected_delegate: bool) -> bool:
 def write_file(root: Path, relative_path: str, content: str) -> None:
     path = root / relative_path
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
+    _ = path.write_text(content, encoding="utf-8")
 
 
 def write_valid_fixture(root: Path) -> None:
