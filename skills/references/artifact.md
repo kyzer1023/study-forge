@@ -87,6 +87,14 @@ Accept common folder layouts without requiring exact names:
 
 `past-year` is a proof-plane workflow. The learner opens HTML, but the durable proof source is structured data beside the HTML. HTML is a render target, not the proof source or source of truth.
 
+Atomic proof-plane contract:
+
+- Treat every mark-bearing question or subpart that expects an answer as an atomic answerable unit, with its own `question_id`; for example, `B2(a)(i)` is separate from `B2(a)(ii)`.
+- Keep parent prompts, shared instructions, tables, figures, and diagrams as context/evidence. Link child entries to that context with `parent_question_id` when useful, but do not let a parent context record replace answerable child records.
+- Create one `answer-ledger.json` record for each answerable subpart unless the item is explicitly `Unreadable`, `Duplicate`, or `Out of scope`.
+- Give every rendered ledger entry a unique non-empty `rendered_anchor`; duplicate, blank, or missing anchors are proof/render drift.
+- For objective questions, write answer-specific `student_explanation` text tied to the chosen answer and cited source support. Reject generic boilerplate explanations that could fit multiple different questions.
+
 Strict pipeline:
 
 1. Inventory: create `source-inventory.json` listing lecture/source files, syllabus or rubric files, past-year papers, sample answers, marking schemes, extraction limits, and unreadable files.
@@ -114,6 +122,7 @@ Each `answer-ledger.json` entry must include these fields:
 - `paper_id`: string
 - `paper_title`: string
 - `question_id`: string
+- `parent_question_id`: string or null; set when an answerable child depends on shared parent context, tables, figures, diagrams, or instructions
 - `question_text`: string
 - `question_type`: string enum-like label, such as `objective`, `short_answer`, `structured`, `essay`, or `unknown`
 - `marks`: number or null

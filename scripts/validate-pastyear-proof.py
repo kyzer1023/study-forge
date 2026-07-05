@@ -18,6 +18,7 @@ from typing import Final, Sequence
 from pastyear_proof_validator import Issue, IssueCode, JsonValue, validate
 
 SELF_TEST_ROOT: Final = Path(".omo/evidence/studyforge-pastyear-verifier-enforcement/fixtures")
+WORKFLOW_GUARD_FIXTURE_ROOT: Final = Path(".omo/evidence/studyforge-pastyear-workflow-guards/fixtures")
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,6 +42,15 @@ class MutatedCase:
     source: Path
     mutator: Callable[[Path], None]
     code: IssueCode
+
+
+@dataclass(frozen=True, slots=True)
+class SuppressedSubpartCase:
+    label: str
+    source: Path
+    status: str
+    exempt_question_id: str
+    remaining_question_ids: tuple[str, ...]
 
 
 def usage() -> str:
@@ -170,6 +180,33 @@ def make_conflicting_preflight(proof_dir: Path) -> None:
     rewrite_json(proof_dir / "qa-report.json", set_preflight_unavailable)
 
 
+def set_subpart_status(proof_dir: Path, question_id: str, status: str) -> None:
+    def mutate_inventory(data: JsonValue) -> None:
+        if not isinstance(data, dict):
+            return
+        papers = data.get("papers")
+        if not isinstance(papers, list):
+            return
+        for paper in papers:
+            if not isinstance(paper, dict):
+                continue
+            questions = paper.get("questions")
+            if not isinstance(questions, list):
+                continue
+            for question in questions:
+                if not isinstance(question, dict):
+                    continue
+                subparts = question.get("subparts")
+                if not isinstance(subparts, list):
+                    continue
+                for subpart in subparts:
+                    if isinstance(subpart, dict) and subpart.get("question_id") == question_id:
+                        subpart["status"] = status
+                        return
+
+    rewrite_json(proof_dir / "question-inventory.json", mutate_inventory)
+
+
 def expect_mutated_issue(case: MutatedCase) -> bool:
     with tempfile.TemporaryDirectory() as temp_dir:
         proof_dir = Path(temp_dir) / case.source.name
@@ -178,10 +215,50 @@ def expect_mutated_issue(case: MutatedCase) -> bool:
         return expect_issue(Case(case.label, proof_dir, proof_dir / "session-summary.json", case.code))
 
 
+def expect_missing_subpart_suppressed(case: SuppressedSubpartCase) -> bool:
+    with tempfile.TemporaryDirectory() as temp_dir:
+        proof_dir = Path(temp_dir) / case.source.name
+        shutil.copytree(case.source, proof_dir)
+        set_subpart_status(proof_dir, case.exempt_question_id, case.status)
+        readiness, issues = validate(proof_dir, proof_dir / "session-summary.json")
+    missing_details = tuple(
+        issue.detail
+        for issue in issues
+        if issue.code == IssueCode.ANSWERABLE_SUBPART_MISSING_LEDGER_ENTRY
+    )
+    exempt_is_absent = all(not detail.startswith(case.exempt_question_id) for detail in missing_details)
+    remaining_are_present = all(
+        any(detail.startswith(question_id) for detail in missing_details)
+        for question_id in case.remaining_question_ids
+    )
+    if exempt_is_absent and remaining_are_present:
+        print(f"SELF-TEST RED {case.label}: PASS expected status {case.status} suppresses {case.exempt_question_id}")
+        return True
+    print("FAIL self-test")
+    print_result(readiness, issues)
+    return False
+
+
 def run_self_test() -> int:
+    collapsed_subquestions = WORKFLOW_GUARD_FIXTURE_ROOT / "collapsed-subquestions"
+    generic_objective_explanations = WORKFLOW_GUARD_FIXTURE_ROOT / "generic-objective-explanations"
     fallback = SELF_TEST_ROOT / "fallback-local"
     blocking = SELF_TEST_ROOT / "smoke-blocking"
     green = SELF_TEST_ROOT / "independent-verified"
+    if not expect_issue(Case("collapsed-subquestions", collapsed_subquestions, collapsed_subquestions / "session-summary.json", IssueCode.ANSWERABLE_SUBPART_MISSING_LEDGER_ENTRY)):
+        return 1
+    if not expect_missing_subpart_suppressed(
+        SuppressedSubpartCase(
+            "out-of-scope-status",
+            collapsed_subquestions,
+            "Out of scope",
+            "B2(a)(i)",
+            ("B2(a)(ii)", "B2(a)(iii)"),
+        )
+    ):
+        return 1
+    if not expect_issue(Case("generic-objective-explanations", generic_objective_explanations, generic_objective_explanations / "session-summary.json", IssueCode.GENERIC_OBJECTIVE_EXPLANATION)):
+        return 1
     if not expect_issue(Case("fallback-local", fallback, fallback / "session-summary.json", IssueCode.FALLBACK_LOCAL_WITHOUT_INDEPENDENT_CHILD)):
         return 1
     if not expect_mutated_issue(MutatedCase("fallback-inside-independent", green, make_fallback_inside_independent, IssueCode.FALLBACK_LOCAL_WITHOUT_INDEPENDENT_CHILD)):
