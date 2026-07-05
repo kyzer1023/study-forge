@@ -123,13 +123,19 @@ For local testing before publishing, point Codex at:
 C:\Dev\study-forge\skills
 ```
 
-### Verifier Agent Install
+### Delegation And Optional Agent Roles
 
-`$study-forge index` uses the source-controlled indexer role in `agents/studyforge-indexer.toml` plus the workflow in `skills/references/studyforge-indexer.md`. `artifact past-year` and source-pack readiness checks use the verifier role in `agents/studyforge-verifier.toml` and the lane instructions in `skills/references/studyforge-verifier.md`.
+Study Forge uses portable OMO-style delegation for source-heavy work. The parent thread stays the orchestrator: it chooses worker lanes by source scope and command shape, spawns workers when warranted, integrates their reports, and validates evidence before readiness.
+
+The shared contract lives in `skills/references/delegation.md`. `$study-forge index` specializes it with the source-controlled indexer role in `agents/studyforge-indexer.toml` plus the workflow in `skills/references/studyforge-indexer.md`. `artifact past-year` and source-pack readiness checks specialize it with the verifier role in `agents/studyforge-verifier.toml` and the lane instructions in `skills/references/studyforge-verifier.md`.
+
+Keeping `agents/*.toml` in this repo or installing only the Study Forge skill does not register those TOMLs as live Codex custom agents.
 
 The TOML roles are optional installs. The optional Codex agent install paths are `C:\Users\kyzer\.codex\agents\studyforge-indexer.toml` and `C:\Users\kyzer\.codex\agents\studyforge-verifier.toml`. Do not install them globally unless the user asks for that install; normal Study Forge docs, artifact work, and verification passes should not copy files into `C:\Users\kyzer\.codex\agents`.
 
-Fallback when a TOML is not installed: spawn a normal subagent or worker for the needed lane, then paste the relevant lane instructions from `skills/references/studyforge-indexer.md` or `skills/references/studyforge-verifier.md`.
+Fallback when a TOML is not installed or not exposed by the active subagent tool: spawn a normal Codex worker for the needed lane, then paste the relevant lane instructions from `skills/references/delegation.md`, `skills/references/studyforge-indexer.md`, or `skills/references/studyforge-verifier.md`.
+
+The parent chooses lanes by source scope and command shape. `index`, `artifact past-year`, and broad source-heavy commands can all use subagents; do not wait for a second user approval when the active runtime can spawn workers and the task shape warrants delegation.
 
 Verifier readiness states:
 
