@@ -27,11 +27,39 @@ SHARED_TOKENS: Final = (
     "qa_executor",
     "final_reviewer",
     "fallback_local",
+    "fallback_local_reviewed",
     "baseline_unverified",
     "installed_toml_agent",
     "parent_validated",
     "tooling_preflight",
 )
+HARNESS_LAYER_TOKENS: Final = ("OmO/Codex harness", "OmO harness", "Codex harness")
+RUNTIME_NEGATORS: Final = (
+    "does not implement",
+    "does not own",
+    "not implement",
+    "not own",
+    "not a bespoke",
+    "not a custom",
+    "no bespoke",
+)
+PARENT_THREAD_TOKENS: Final = ("parent thread", "main thread", "conductor", "orchestrator")
+PARENT_SOURCE_WORK_CLAIMS: Final = (
+    "broad source extraction",
+    "broad source indexing",
+    "broad source verification",
+    "source extraction",
+    "source indexing",
+    "source verification",
+    "source-pack construction",
+    "extracts sources",
+    "indexes sources",
+    "verifies sources",
+)
+PARENT_SOURCE_WORK_NEGATORS: Final = ("does not", "do not", "must not", "cannot", "is not responsible")
+WORKER_SOURCE_WORK_TOKENS: Final = ("extract", "index", "source-pack", "verification", "qa")
+WORKER_PROMPT_ASSIGNMENT_TOKENS: Final = ("self-contained", "assignment")
+FALLBACK_REVIEWED_DEGRADED_TOKENS: Final = ("degraded", "not independent", "not independently", "not verified")
 COMMAND_REQUIREMENTS: Final = {
     "skills/references/artifact.md": ("source_research", "verifier", "qa_executor", "final_reviewer", "fallback_local"),
     "skills/references/distill.md": ("source_research", "verifier", "qa_executor", "fallback_local"),

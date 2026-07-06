@@ -119,7 +119,7 @@ def tooling_preflight_ready(pack: JsonObject, relative_path: str, issues: list[I
     return available is True and bool(checked)
 
 
-def lane_has_child_proof(root: Path, pack_dir: Path, lane: JsonObject, relative_path: str) -> bool:
+def lane_has_child_proof(root: Path, pack_dir: Path, lane: JsonObject) -> bool:
     if normalized_json_text(lane, "invocation_mode") not in INDEPENDENT_INVOCATION_MODES:
         return False
     has_child_identity = text_json(lane, "child_agent_id") is not None or text_json(lane, "child_thread_id") is not None
@@ -147,7 +147,7 @@ def has_complete_lane(root: Path, pack_dir: Path, lanes: Sequence[JsonObject], r
     for lane in lanes:
         role_matches = normalized_json_text(lane, "role") == role
         lane_matches = lane_name is None or normalized_json_text(lane, "lane") == lane_name
-        if role_matches and lane_matches and lane_has_child_proof(root, pack_dir, lane, ".study-forge/source-pack/pack-verification.json"):
+        if role_matches and lane_matches and lane_has_child_proof(root, pack_dir, lane):
             return True
     return False
 
@@ -221,7 +221,9 @@ def check_truthfulness(root: Path, issues: list[Issue]) -> None:
         for line_number, line in enumerate(text.splitlines(), start=1):
             lowered = line.casefold()
             claims_independent = any(phrase in lowered for phrase in FALLBACK_CLAIM_PHRASES)
-            if "fallback_local" in lowered and claims_independent and not any(negator in lowered for negator in FALLBACK_NEGATORS):
+            if "fallback_local_reviewed" in lowered and claims_independent and not any(negator in lowered for negator in FALLBACK_NEGATORS):
+                issues.append(Issue(f"{relative_path}:{line_number}", "fallback_local_reviewed claimed as independent verification"))
+            elif "fallback_local" in lowered and claims_independent and not any(negator in lowered for negator in FALLBACK_NEGATORS):
                 issues.append(Issue(f"{relative_path}:{line_number}", "fallback_local claimed as independent verification"))
             if line_requires_user_approval(line):
                 issues.append(Issue(f"{relative_path}:{line_number}", "requires second user approval before warranted delegation"))

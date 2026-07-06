@@ -1,87 +1,31 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 import tempfile
 
-from .checks import artifact_boundary_issues, validate
+from .checks import artifact_boundary_issues, check_truthfulness, validate
+from .harness_contract import check_harness_contract
 from .io_utils import write_file
 from .model import (
-    COMMAND_REQUIREMENTS,
     FixtureCase,
     HOOK_AUTHORIZATION_SENTENCE,
     Issue,
     JsonObject,
     OPT_OUT_TOKENS,
     PROMPT_TOKENS,
-    READINESS_FILES,
     REQUIRED_SECTIONS,
     SHARED_TOKENS,
 )
-
-
-def write_valid_fixture(root: Path) -> None:
-    hook_line = f"{HOOK_AUTHORIZATION_SENTENCE} If the user says local only, no subagents, no delegation, or otherwise restricts tool use, record fallback_local instead."
-    delegation = "\n".join((
-        *REQUIRED_SECTIONS,
-        *PROMPT_TOKENS,
-        *SHARED_TOKENS,
-        "second user approval",
-        hook_line,
-        "| `source_index` | Challenge source-pack inventory, freshness, coverage, page accounting, and consumer fallback behavior after studyforge-indexer construction. | PDF-heavy or multi-source `index`. | PASS, MAJOR, BLOCKING, or NOT_RUN findings. |",
-        "| `index` or `source-index` over a PDF-heavy or multi-source folder | Run `studyforge-indexer` construction by file, file bundle, or page range first, then run `studyforge-verifier` with lane `source_index`. | `studyforge-indexer`, `source_index`, `studyforge-verifier`, `qa_executor`, `final_reviewer` |",
-    ))
-    write_file(root, "skills/references/delegation.md", delegation)
-    write_file(root, "skills/SKILL.md", f"references/delegation.md source-heavy second user approval validates worker output {hook_line}")
-    for relative_path, tokens in COMMAND_REQUIREMENTS.items():
-        write_command_reference(root, relative_path, tokens)
-    write_valid_pack(root)
-    write_artifact_fixtures(root)
-    safe_line = "fallback_local is not independent verification; do not wait for a second user approval."
-    for relative_path in READINESS_FILES:
-        if relative_path.startswith("agents/"):
-            continue
-        path = root / relative_path
-        existing = path.read_text(encoding="utf-8") if path.exists() else ""
-        write_file(root, relative_path, f"{existing}\n{safe_line}\n")
-    toml = 'name = "role"\ndeveloper_instructions = """optional role wording. Do not invent child IDs. Preserve source policy."""\n'
-    write_file(root, "agents/studyforge-indexer.toml", toml)
-    write_file(root, "agents/studyforge-verifier.toml", toml)
-
-
-def write_command_reference(root: Path, relative_path: str, tokens: tuple[str, ...]) -> None:
-    if relative_path == "skills/references/index.md":
-        text = "Run studyforge-indexer construction by file, file bundle, or page range first. Topics are outputs after extraction, not primary sharding keys. Then run studyforge-verifier with lane source_index. "
-        write_file(root, relative_path, text + " ".join(tokens) + "\n")
-        return
-    if relative_path == "skills/references/artifact.md":
-        text = " ".join(tokens) + "\nLearner HTML is audit-free by default. Source Basis, Scope Boundaries, Verification Notes, Manual QA status, raw verifier lane status, lane_evidence, and raw_report references stay in sidecar proof files, qa-report.json, verifier-reports, and answer-ledger.json.\n"
-        write_file(root, relative_path, text)
-        return
-    write_file(root, relative_path, " ".join(tokens))
-
-
-def write_valid_pack(root: Path) -> None:
-    write_file(root, ".study-forge/source-pack/indexer-reports/indexer-child.json", "{}\n")
-    write_file(root, ".study-forge/source-pack/verifier-reports/source-index.json", "{}\n")
-    write_file(root, ".study-forge/source-pack/pack-verification.json", "{\n"
-        '  "invocation_mode": "independent_subagent",\n'
-        '  "tooling_preflight": {"available": true, "checked": ["multi_agent_v1.spawn_agent"]},\n'
-        '  "readiness_state": "independent_verified",\n'
-        '  "indexer_lanes": [{"role": "studyforge-indexer", "lane": "source_index", "invocation_mode": "independent_subagent", "child_agent_id": "indexer-child", "raw_child_report_path": "indexer-reports/indexer-child.json", "parent_validated": true}],\n'
-        '  "verifier_lanes": [{"role": "studyforge-verifier", "lane": "source_index", "invocation_mode": "independent_subagent", "child_agent_id": "verifier-child", "raw_child_report_path": "verifier-reports/source-index.json", "parent_validated": true}]\n'
-        "}\n")
-
-
-def write_artifact_fixtures(root: Path) -> None:
-    write_file(root, "scripts/fixtures/delegation/audit-free-learner.html", "<!doctype html><html><body><main><h1>Revision Atlas</h1><p>Source gap: unreadable annotation.</p></main></body></html>")
-    write_file(root, "scripts/fixtures/delegation/artifact-sidecar-proof.json", "{\n"
-        '  "Source Basis": ["lecture slides"],\n'
-        '  "Scope Boundaries": ["revision topics"],\n'
-        '  "Verification Notes": ["learner surface checked"],\n'
-        '  "Manual QA status": "PASS",\n'
-        '  "lane_evidence": [{"lane": "learner_surface", "status": "PASS"}],\n'
-        '  "raw_report_references": ["qa-report.json"]\n'
-        "}\n")
+from .self_test_fixtures import (
+    fallback_pack_without_indexer,
+    incomplete_preflight_pack,
+    json_fixture,
+    missing_sidecar_proof,
+    valid_sidecar_proof,
+    write_valid_fixture,
+    write_valid_pack,
+)
 
 
 def remove_delegation(root: Path) -> None:
@@ -92,8 +36,40 @@ def remove_prompt_shape(root: Path) -> None:
     write_file(root, "skills/references/delegation.md", "\n".join((*REQUIRED_SECTIONS, *SHARED_TOKENS)))
 
 
+def remove_harness_layer(root: Path) -> None:
+    path = root / "skills/references/delegation.md"
+    text = path.read_text(encoding="utf-8").replace(
+        "Study Forge uses the OmO/Codex harness as the orchestration layer.\n",
+        "",
+    )
+    write_file(root, "skills/references/delegation.md", text)
+
+
+def write_parent_dirty_work(root: Path) -> None:
+    path = root / "skills/references/delegation.md"
+    text = path.read_text(encoding="utf-8")
+    write_file(
+        root,
+        "skills/references/delegation.md",
+        f"{text}\nThe parent thread performs broad source extraction and source verification before assigning workers.\n",
+    )
+
+
+def remove_worker_assignment(root: Path) -> None:
+    path = root / "skills/references/delegation.md"
+    text = path.read_text(encoding="utf-8").replace(
+        "Worker prompt examples are self-contained OmO/Codex assignments.\n",
+        "",
+    )
+    write_file(root, "skills/references/delegation.md", text)
+
+
 def claim_fallback_independent(root: Path) -> None:
     write_file(root, "skills/references/studyforge-verifier.md", "fallback_local is independent verification")
+
+
+def claim_fallback_reviewed_independent(root: Path) -> None:
+    write_file(root, "README.md", "fallback_local_reviewed is independent verification")
 
 
 def require_approval(root: Path) -> None:
@@ -126,13 +102,11 @@ def write_verifier_before_indexer(root: Path) -> None:
 
 def write_fallback_local_pack_without_indexer(root: Path) -> None:
     write_file(root, ".study-forge/source-pack/verifier-reports/source-index.json", "{}\n")
-    write_file(root, ".study-forge/source-pack/pack-verification.json", "{\n"
-        '  "invocation_mode": "fallback_local",\n'
-        '  "tooling_preflight": {"available": true, "checked": ["multi_agent_v1.spawn_agent"]},\n'
-        '  "readiness_state": "independent_verified",\n'
-        '  "verifier_lanes": [{"role": "studyforge-verifier", "lane": "source_index", "invocation_mode": "independent_subagent", "child_agent_id": "verifier-child", "raw_child_report_path": "verifier-reports/source-index.json", "parent_validated": true}],\n'
-        '  "indexer_lanes": []\n'
-        "}\n")
+    write_file(
+        root,
+        ".study-forge/source-pack/pack-verification.json",
+        json_fixture(fallback_pack_without_indexer()),
+    )
 
 
 def write_missing_raw_report_pack(root: Path) -> None:
@@ -142,13 +116,11 @@ def write_missing_raw_report_pack(root: Path) -> None:
 
 def write_incomplete_preflight_pack(root: Path) -> None:
     write_valid_pack(root)
-    write_file(root, ".study-forge/source-pack/pack-verification.json", "{\n"
-        '  "invocation_mode": "independent_subagent",\n'
-        '  "tooling_preflight": {"available": true},\n'
-        '  "readiness_state": "independent_verified",\n'
-        '  "indexer_lanes": [{"role": "studyforge-indexer", "lane": "source_index", "invocation_mode": "independent_subagent", "child_agent_id": "indexer-child", "raw_child_report_path": "indexer-reports/indexer-child.json", "parent_validated": true}],\n'
-        '  "verifier_lanes": [{"role": "studyforge-verifier", "lane": "source_index", "invocation_mode": "independent_subagent", "child_agent_id": "verifier-child", "raw_child_report_path": "verifier-reports/source-index.json", "parent_validated": true}]\n'
-        "}\n")
+    write_file(
+        root,
+        ".study-forge/source-pack/pack-verification.json",
+        json_fixture(incomplete_preflight_pack()),
+    )
 
 
 def require_audit_heavy_learner_html(root: Path) -> None:
@@ -161,6 +133,34 @@ def expect_issue(case: FixtureCase) -> bool:
         write_valid_fixture(root)
         case.mutate(root)
         issues = validate(root)
+    if any(case.expected in issue.detail for issue in issues):
+        print(f"SELF-TEST RED {case.label}: PASS expected {case.expected}")
+        return True
+    print(f"FAIL self-test {case.label}: expected {case.expected}")
+    print_result(issues)
+    return False
+
+
+def delegation_harness_issues(root: Path) -> tuple[Issue, ...]:
+    issues: list[Issue] = []
+    relative_path = "skills/references/delegation.md"
+    text = (root / relative_path).read_text(encoding="utf-8")
+    check_harness_contract(text, relative_path, issues)
+    return tuple(issues)
+
+
+def truthfulness_issues(root: Path) -> tuple[Issue, ...]:
+    issues: list[Issue] = []
+    check_truthfulness(root, issues)
+    return tuple(issues)
+
+
+def expect_direct_issue(case: FixtureCase, collect_issues: Callable[[Path], tuple[Issue, ...]]) -> bool:
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        write_valid_fixture(root)
+        case.mutate(root)
+        issues = collect_issues(root)
     if any(case.expected in issue.detail for issue in issues):
         print(f"SELF-TEST RED {case.label}: PASS expected {case.expected}")
         return True
@@ -207,13 +207,31 @@ def self_test_cases() -> tuple[FixtureCase, ...]:
     )
 
 
+def harness_contract_cases() -> tuple[FixtureCase, ...]:
+    return (
+        FixtureCase("missing-omo-harness-layer", remove_harness_layer, "missing-omo-harness-layer"),
+        FixtureCase("parent-does-source-heavy-work", write_parent_dirty_work, "parent-does-source-heavy-work"),
+        FixtureCase("missing-worker-prompt-assignment", remove_worker_assignment, "missing-worker-prompt-assignment"),
+    )
+
+
+def truthfulness_cases() -> tuple[FixtureCase, ...]:
+    return (
+        FixtureCase("fallback-reviewed-claimed-independent", claim_fallback_reviewed_independent, "fallback_local_reviewed claimed"),
+    )
+
+
 def run_self_test() -> int:
+    if not all(expect_direct_issue(case, delegation_harness_issues) for case in harness_contract_cases()):
+        return 1
+    if not all(expect_direct_issue(case, truthfulness_issues) for case in truthfulness_cases()):
+        return 1
     if not all(expect_issue(case) for case in self_test_cases()):
         return 1
     audit_free_html = "<main><h1>Revision Atlas</h1><p>Source gap: unreadable note.</p></main>"
     audit_heavy_html = "<main><h2>Source Basis</h2><p>Manual QA status and raw verifier lane status.</p></main>"
-    sidecar_proof: JsonObject = {"Source Basis": ["lecture slides"], "Scope Boundaries": ["revision topics"], "Verification Notes": ["checked against ledger"], "Manual QA status": "PASS", "lane_evidence": [{"lane": "learner_surface", "status": "PASS"}], "raw_report_references": ["qa-report.json"]}
-    missing_sidecar: JsonObject = {"Source Basis": ["lecture slides"], "lane_evidence": []}
+    sidecar_proof = valid_sidecar_proof()
+    missing_sidecar = missing_sidecar_proof()
     if not expect_artifact_boundary_issue("audit-heavy-learner", audit_heavy_html, sidecar_proof, "audit scaffold"):
         return 1
     if not expect_artifact_boundary_issue("artifact-sidecar-missing-proof", audit_free_html, missing_sidecar, "sidecar proof missing field"):
