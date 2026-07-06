@@ -2,7 +2,7 @@
 
 Use for `$study-forge index <course-folder>` or `$study-forge source-index <course-folder>`.
 
-The command builds a reusable semantic source-pack for a course folder. Original PDFs remain authority; the source-pack is an indexed access layer that helps later Study Forge commands find text, visuals, topics, and locators quickly. It must never be treated as stronger than the current source files.
+The command builds a reusable semantic source-pack for a course folder. Original PDFs and source files remain authority; the source-pack is an indexed access layer that helps later Study Forge commands find text, visuals, topics, and locators quickly. It must not be treated as stronger than the current source files.
 
 ## Execution Contract
 
@@ -10,6 +10,8 @@ The command builds a reusable semantic source-pack for a course folder. Original
 
 1. Run `studyforge-indexer` lanes first. For PDF-heavy or multi-source folders, assign each in-scope file, file bundle, or page range to an indexer lane instead of letting the main agent produce a single-agent baseline. Use topics as output from the index, not as the primary sharding key; topic boundaries are discovered after extraction.
 2. Run an independent `studyforge-verifier` invocation with lane `source_index` after the indexer handoff. The verifier challenges source inventory, freshness, page accounting, visual interpretation, confidence labels, topic coverage, and downstream fallback behavior.
+
+For finals, revision, and `artifact past-year` workflows over a course folder, keep the operating order index first, artifact second. Downstream work should use a fresh source-pack first for routing and locators, then open the original source files for any stale hash, missing page/topic, low-confidence visual interpretation, `source_gap`, `unreadable`, spot check, or verifier challenge.
 
 Follow the shared contract in `skills/references/delegation.md`. The agent decides whether the source scope warrants subagents. PDF-heavy or multi-source folders normally warrant independent `indexer` and `verifier` lanes plus a `source_index` verification lane; do not wait for a second user approval when the active runtime can spawn workers.
 
@@ -210,8 +212,8 @@ If any rule fails, downstream commands may still read the pack for orientation, 
 ## Downstream Consumption Rules
 
 - `distill`, `map`, `sheet`, `artifact`, `mark`, and other source-heavy commands should prefer a fresh `.study-forge/source-pack/manifest.json` when present.
-- The pack supplies source inventory, topic candidates, page locators, confidence labels, visual notes, and gaps. It does not supply final answers by itself.
-- For `artifact past-year`, `answer-ledger.json` remains the canonical answer source. The source-pack can feed evidence, topic-source fit, locators, and source-gap decisions.
+- The pack supplies source inventory, topic candidates, page locators, confidence labels, visual notes, and gaps. It is an access layer, not source truth, and does not supply final answers by itself.
+- For `artifact past-year`, `answer-ledger.json` remains the canonical answer source. The source-pack can feed evidence, topic-source fit, locators, and source-gap decisions, but it must not replace the answer ledger.
 - Open the original PDFs or source files when the pack is missing, stale, low-confidence, visually incomplete, contradicted by the prompt, challenged by the verifier, or needed for spot checks.
 - Do not fill missing evidence from memory. Record `source_gap`, `manual_review_gap`, or `unreadable_gap` when current sources cannot support the claim.
 - Preserve locator chains in downstream outputs: answer or topic -> pack record -> source locator -> original file.

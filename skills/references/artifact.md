@@ -14,11 +14,11 @@ If the user wants a no-source exploration, do not create an artifact. Answer in 
 
 ## Source-Pack Routing
 
-When the source scope is a course folder or known local source set, look for a fresh `.study-forge/source-pack/manifest.json` first. If the manifest is present and fresh, use the source-pack before reopening PDFs: read the inventory, page records, topic index, locators, confidence labels, visual notes, and gaps as the source evidence/access layer.
+When the source scope is a course folder or known local source set, look for a fresh `.study-forge/source-pack/manifest.json` first. For finals, revision, and `past-year` work, the expected route is index first, then source-pack first during artifact planning. If the manifest is present and fresh, use the source-pack before reopening PDFs: read the inventory, page records, topic index, locators, confidence labels, visual notes, and gaps as the source evidence/access layer.
 
-Use fallback to source PDFs, slides, screenshots, notebooks, code, or other original files when the manifest is missing, hashes are stale, the needed page/topic is missing, visual interpretation is low-confidence, the pack records a `Source gap`, the page is `Unreadable`, a verifier challenge disputes the pack, or a spot check is needed. If no fresh pack exists, inspect the original source material directly before creating the artifact.
+Use fallback to source PDFs, slides, screenshots, notebooks, code, or other original files when the manifest is missing, hashes are stale, the needed page/topic is missing, visual interpretation is low-confidence, the pack records a `Source gap`, the page is `Unreadable`, a verifier challenge disputes the pack, or a spot check is needed. If no fresh pack exists, inspect the original source material directly before creating the artifact. If a fresh pack is insufficient for one page, topic, question, answer, or visual claim, open the affected original before rendering that item or mark it as `Source gap` / `Unreadable`.
 
-For `artifact past-year`, preserve the proof plane: `answer-ledger.json` remains the canonical answer source for HTML rendering and QA summaries. The source-pack can feed source evidence, topic-source fit, locators, stale-hash decisions, source gaps, and unreadable-page notes, but it must not replace the answer ledger.
+This is routing, not authority transfer: the source-pack is an access layer and must not be treated as stronger than the current source files. For `artifact past-year`, preserve the proof plane: `answer-ledger.json` remains the canonical answer source for answer text, provenance, HTML rendering, and QA summaries. The source-pack can feed source evidence, topic-source fit, locators, stale-hash decisions, source gaps, and unreadable-page notes, but it must not replace the answer ledger.
 
 ## Delegation Routing
 
@@ -121,7 +121,7 @@ Required proof docs:
 - `verifier-reports/`
 - `qa-report.json`
 
-`answer-ledger.json` must be the only canonical answer source used to render HTML and QA summaries. Do not edit the HTML as the proof record. Regenerate or patch the ledger first, then render HTML from the ledger.
+`answer-ledger.json` must be the only canonical answer source used to render HTML and QA summaries. It is also canonical for answer provenance: status, `source_refs`, `source_gap_reason`, verifier findings, and rendered anchors. Do not edit the HTML as the proof record. Regenerate or patch the ledger first, then render HTML from the ledger.
 
 Each `answer-ledger.json` entry must include these fields:
 
@@ -192,10 +192,10 @@ multi_agent_v1.spawn_agent({message:"TASK: Run the Study Forge verifier lane <la
 Record exactly one readiness state in `qa-report.json`, sidecar proof files, and the final response:
 
 - `independent_verified`: all required verifier lanes ran through independent verifier subagents or the installed verifier role, and every `BLOCKING` finding was fixed or converted to `Source gap` / `Unreadable`.
-- `fallback_local_reviewed`: verifier tooling/subagent preflight was attempted, independent lanes could not run, and the same lanes were checked as separate local passes. This is degraded.
+- `fallback_local_reviewed`: verifier tooling/subagent preflight was attempted, independent lanes could not run, and the same lanes were checked as separate local passes. This is degraded local review, not independent verification.
 - `baseline_unverified`: verifier preflight was not run, proof docs are incomplete, or verifier lane results are missing.
 
-Only `independent_verified` can support a normal readiness claim after blocking findings are resolved. The other states must remain visible in proof sidecars and the final response, with unresolved limitations named; learner HTML shows only limitations that affect studying.
+Only `independent_verified` can support a normal readiness claim after blocking findings are resolved. `fallback_local_reviewed` must not be promoted to independent verification and still requires explicit degraded-state wording. The other states must remain visible in proof sidecars and the final response, with unresolved limitations named; learner HTML shows only limitations that affect studying.
 
 late discovery rule: if multi-agent tooling or the verifier role becomes available after local review began, rerun the affected verifier lanes through that tooling or escalate as blocked. Do not silently finish from local passes.
 
