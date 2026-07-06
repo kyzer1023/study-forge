@@ -4,7 +4,7 @@ Use this shared contract when Study Forge work is source-heavy, PDF-heavy, multi
 
 Study Forge does not implement or own a bespoke runtime. It owns study semantics, proof contracts, artifact schemas, fallback labels, validator expectations, and the prompts passed into whatever OmO/Codex worker path is live in the current runtime.
 
-The delegation model is portable. Prefer live Codex worker/subagent tooling when available. Optional TOML role wording may be installed or pasted into worker prompts, but source-controlled `agents/*.toml` files are documentation and prompt templates, not proof that a live custom agent is registered. TOML role files are not proof that a lane ran, a worker exists, or a readiness state is supported. Do not install TOML roles globally during normal Study Forge operation; treat global registration as a separate explicit maintenance task.
+The delegation model is portable. Prefer live Codex worker/subagent tooling when available. Optional TOML role wording may be installed or pasted into worker prompts, but source-controlled `agents/*.toml` files are documentation and harness prompt templates, not proof that a live worker role is available. TOML role files are not proof that a lane ran, a worker exists, or a readiness state is supported. Do not install TOML roles globally during normal Study Forge operation; treat global registration as a separate explicit maintenance task.
 
 Production proof comes from current artifacts and evidence: live worker invocation records, raw child reports, source-pack files, verifier reports, QA reports, proof sidecars, answer ledgers, rendered artifacts, and parent validation notes. Template existence, role text, or source-controlled TOML files are never live proof by themselves.
 

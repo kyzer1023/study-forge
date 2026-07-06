@@ -133,7 +133,7 @@ The shared contract lives in `skills/references/delegation.md`. `$study-forge in
 
 For course folder workflows, route index first and source-pack first. The pack is the access layer; original PDFs, slides, screenshots, notebooks, and code remain authoritative and must be reopened for stale hashes, missing records, low-confidence visual interpretation, source gaps, unreadable pages, or spot checks.
 
-Keeping `agents/*.toml` in this repo or installing only the Study Forge skill does not register those TOMLs as live Codex agents. The tracked TOMLs document lane prompts and optional role definitions; normal Study Forge docs, artifact work, and verification passes should not copy files into `C:\Users\kyzer\.codex\agents` unless the user explicitly asks for that install.
+Keeping `agents/*.toml` in this repo or installing only the Study Forge skill does not register those TOMLs as live Codex agents. The tracked TOMLs are harness prompt templates and optional role definitions; normal Study Forge docs, artifact work, and verification passes should not copy files into `C:\Users\kyzer\.codex\agents` unless the user explicitly asks for that install.
 
 Fallback when a named role is not installed or not exposed by the active worker tool: spawn a normal Codex worker for the needed lane, then paste the relevant lane instructions from `skills/references/delegation.md`, `skills/references/studyforge-indexer.md`, or `skills/references/studyforge-verifier.md`.
 

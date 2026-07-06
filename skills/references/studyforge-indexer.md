@@ -2,7 +2,7 @@
 
 Use the portable `studyforge-indexer` role to build a course-local `.study-forge/source-pack/` from PDFs, slides, screenshots, past-year papers, marking schemes, lab sheets, and other course files. The role is constructive: it creates structured records, confidence labels, and gap notes for later Study Forge commands. It does not certify readiness.
 
-The source-controlled TOML is optional role wording, not proof that a live agent is installed. During normal Study Forge operation, do not install or sync TOML roles globally. If the parent records evidence metadata for this work, the lane value is `source_index`; the parent fills `invocation_mode`, child identity, raw report path, parent validation, and tooling preflight.
+The source-controlled TOML is a harness prompt template and optional role wording, not proof that a live worker role is installed or that a lane ran. During normal Study Forge operation, do not install or sync TOML roles globally. If the parent records evidence metadata for this work, the lane value is `source_index`; the parent fills `invocation_mode`, child identity, raw report path, parent validation, and tooling preflight.
 
 Keep quality control separate. The indexer prepares the pack and handoff summary; `studyforge-verifier` challenges freshness, coverage, visual interpretation, topic fit, and consumer fallback behavior afterward.
 

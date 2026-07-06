@@ -9,7 +9,7 @@ Use one portable verifier role, `studyforge-verifier`, for `artifact past-year` 
 - `correctness`
 - `learner_surface`
 
-Do not create separate verifier TOMLs per lane. The source-controlled TOML is optional role wording, not proof that a live agent is installed. If the TOML is not installed in a live Codex agent registry, spawn a normal reviewer/subagent and paste this reference plus the lane value. Do not install the TOML globally during normal Study Forge operation.
+Do not create separate verifier TOMLs per lane. The source-controlled TOML is a harness prompt template and optional role wording, not proof that a live worker role is installed or that a lane ran. If the TOML is not exposed as a live worker role by the current runtime, spawn a normal reviewer/subagent and paste this reference plus the lane value. Do not install the TOML globally during normal Study Forge operation.
 
 ## Operating Rules
 
