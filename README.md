@@ -2,7 +2,7 @@
 
 Source-backed studying for students. One Codex skill that turns slides, PDFs, exam papers, examples, notebooks, code, and rubrics into simple explanations, high-yield notes, traces, drills, and exam-ready answers.
 
-> Quick start: attach or point to your course materials, then use `$study-forge <command> <target>`. Start with `$study-forge distill lecture.pdf`, `$study-forge index "C:\...\Course"` for a full course folder, or `$study-forge rescue "final tomorrow"` when time is tight.
+> Quick start: attach or point to your course materials, then use `$study-forge <command> <target>`. Start with `$study-forge distill lecture.pdf`, `$study-forge index "C:\...\Course"` for a full course folder, or `$study-forge rescue "final tomorrow"` when time is tight. For finals with a course folder, run `index` first, then run `artifact past-year` against the same folder so the source-pack is used first without replacing the original files as authority.
 
 ## Why Study Forge?
 
@@ -44,7 +44,7 @@ If you ask for likely exam topics, chapter distillation, marking, a final sheet,
 
 It can still answer general concept questions without sources, but it should label that as general explanation rather than source-backed exam prioritization.
 
-For large course folders, `$study-forge index <course-folder>` is the feeder workflow. PDFs, slides, and screenshots stay the authority; the source-pack is fast indexed access. PDF-heavy or multi-source indexing should run `studyforge-indexer` lanes by file, file bundle, or page range, then an independent `studyforge-verifier source_index` lane before the pack is called ready. Downstream commands use the pack first when it is fresh, and the pack records confidence notes and gaps in plain language so uncertain pages stay visible.
+For course folder workflows, the happy path is index first and source-pack first. `$study-forge index <course-folder>` is the feeder workflow. PDFs, slides, and screenshots stay the authority; the source-pack is fast indexed access, not a replacement for originals. The OmO/Codex harness keeps the main thread conducting while workers do source-heavy dirty work by file, file bundle, or page range, then an independent `studyforge-verifier source_index` lane checks the pack before it is called ready. Downstream commands use the pack first when it is fresh, and the pack records confidence notes and gaps in plain language so uncertain pages stay visible.
 
 ## Commands
 
@@ -84,7 +84,7 @@ $study-forge artifact atlas "C:\CS_USM\Y2S2\CST235\Lecture"
 $study-forge artifact past-year "C:\CS_USM\Y2S2\CST235"
 ```
 
-After the first command builds the pack, the later `artifact past-year` command reuses that pack first when file hashes still match, then reopens original materials for missing pages, stale records, low-confidence visual interpretation, source gaps, or spot checks.
+Finals happy path: `index` the whole course folder first, then run `artifact past-year` against the same folder. The later `artifact past-year` command uses the source-pack first when file hashes still match, then reopens original materials for missing pages, stale records, low-confidence visual interpretation, source gaps, or spot checks. Unsupported answers stay labeled `Source gap` instead of being filled from memory.
 
 Or use it directly with a natural request:
 
@@ -125,27 +125,28 @@ For local testing before publishing, point Codex at:
 C:\Dev\study-forge\skills
 ```
 
-### Delegation And Optional Agent Roles
+### OmO/Codex Harness And Worker Lanes
 
-Study Forge uses portable OMO-style delegation for source-heavy work. The parent thread stays the orchestrator: it chooses worker lanes by source scope and command shape, spawns workers when warranted, integrates their reports, and validates evidence before readiness.
+Study Forge uses the portable OmO/Codex harness for source-heavy work. The main thread conducts: it scopes the command, chooses worker lanes by source scope and command shape, spawns workers when warranted, integrates their reports, and validates evidence before readiness. Workers do source-heavy dirty work such as extraction, page/image passes, source-pack construction, answer-ledger checks, verifier lanes, and learner-surface review.
 
 The shared contract lives in `skills/references/delegation.md`. `$study-forge index` specializes it with the source-controlled indexer role in `agents/studyforge-indexer.toml` plus the workflow in `skills/references/studyforge-indexer.md`. `artifact past-year` and source-pack readiness checks specialize it with the verifier role in `agents/studyforge-verifier.toml` and the lane instructions in `skills/references/studyforge-verifier.md`.
 
-Keeping `agents/*.toml` in this repo or installing only the Study Forge skill does not register those TOMLs as live Codex custom agents.
+For course folder workflows, route index first and source-pack first. The pack is the access layer; original PDFs, slides, screenshots, notebooks, and code remain authoritative and must be reopened for stale hashes, missing records, low-confidence visual interpretation, source gaps, unreadable pages, or spot checks.
 
-The TOML roles are optional installs. The optional Codex agent install paths are `C:\Users\kyzer\.codex\agents\studyforge-indexer.toml` and `C:\Users\kyzer\.codex\agents\studyforge-verifier.toml`. Do not install them globally unless the user asks for that install; normal Study Forge docs, artifact work, and verification passes should not copy files into `C:\Users\kyzer\.codex\agents`.
+Keeping `agents/*.toml` in this repo or installing only the Study Forge skill does not register those TOMLs as live Codex agents. The tracked TOMLs document lane prompts and optional role definitions; normal Study Forge docs, artifact work, and verification passes should not copy files into `C:\Users\kyzer\.codex\agents` unless the user explicitly asks for that install.
 
-Fallback when a TOML is not installed or not exposed by the active subagent tool: spawn a normal Codex worker for the needed lane, then paste the relevant lane instructions from `skills/references/delegation.md`, `skills/references/studyforge-indexer.md`, or `skills/references/studyforge-verifier.md`.
+Fallback when a named role is not installed or not exposed by the active worker tool: spawn a normal Codex worker for the needed lane, then paste the relevant lane instructions from `skills/references/delegation.md`, `skills/references/studyforge-indexer.md`, or `skills/references/studyforge-verifier.md`.
 
-The parent chooses lanes by source scope and command shape. `index`, `artifact past-year`, and broad source-heavy commands can all use subagents; do not wait for a second user approval when the active runtime can spawn workers and the task shape warrants delegation.
+`index`, `artifact past-year`, and broad source-heavy commands can all use workers; do not wait for a second user approval when the active harness can spawn workers and the task shape warrants delegation. If the user says `local only`, `no subagents`, `no delegation`, or otherwise restricts tool use, keep the work local and mark any missing lane truthfully.
 
 Verifier readiness states:
 
 - `independent_verified`: an independent subagent or installed verifier role ran the required lanes.
+- `fallback_local`: a required worker lane could not run and the main thread made a local pass. This is degraded.
 - `fallback_local_reviewed`: the role was unavailable after preflight, so copied lane instructions were run as separate local passes. This is degraded.
 - `baseline_unverified`: verifier preflight or required lane results are missing.
 
-For `artifact past-year`, use copied verifier instructions only as the normal-subagent fallback path, keep the degraded state visible, and escalate or rerun if multi-agent tooling is discovered late.
+For `artifact past-year`, use copied verifier instructions only as the normal-worker fallback path, keep `fallback_local`, `fallback_local_reviewed`, and `baseline_unverified` visibly degraded, and rerun through workers if multi-agent tooling is discovered late.
 
 A local pass is not `subagent-verified`.
 
