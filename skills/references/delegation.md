@@ -20,6 +20,8 @@ The parent thread owns the command, evidence policy, integration, and final read
 
 Workers do the dirty work: source inventory, source research, source-pack construction, extraction checks, evidence checks, artifact QA, and adversarial review. They return concise lane findings only. They do not decide final readiness, fill parent metadata, invent child IDs, hide source gaps, install TOML roles, commit changes, or override the Study Forge contract.
 
+For PDF-heavy or multi-source conductor mode, the parent must not construct broad source inventories, PDF/page extraction records, source-pack records, topic extraction, confidence labels, or visual interpretation itself. The parent may route, shard, spawn, wait, validate schemas, merge lane outputs, reconcile wrapper metadata, and write the final user answer.
+
 ## Tooling Preflight
 
 Before delegation, the parent checks what worker path is actually available in the current runtime.
@@ -81,7 +83,7 @@ Role names and lane names are related but not identical. `studyforge-indexer` is
 
 | Command shape | Delegation rule | Usual lanes |
 | --- | --- | --- |
-| `index` or `source-index` over a PDF-heavy or multi-source folder | Delegate source-pack construction by file, file bundle, or page range; then run a separate source-pack challenge before readiness. | `source_index`, `qa_executor`, `final_reviewer` |
+| `index` or `source-index` over a PDF-heavy or multi-source folder | Run `studyforge-indexer` construction by file, file bundle, or page range first; then run `studyforge-verifier` with lane `source_index` as a separate source-pack challenge before readiness. | `studyforge-indexer`, `source_index`, `studyforge-verifier`, `qa_executor`, `final_reviewer` |
 | `artifact past-year` | Always run verifier-shaped checks before final readiness; generated HTML/proof surfaces also need QA. | `source_research`, `extraction`, `coverage`, `evidence`, `correctness`, `learner_surface`, `qa_executor`, `final_reviewer` |
 | Other `artifact` modes with broad source scope | Delegate source discovery and artifact surface QA when the artifact will be reused outside chat. | `source_research`, `qa_executor`, `final_reviewer` |
 | Broad `distill`, `map`, `sheet`, or `rescue` over a folder or many documents | Delegate source research; add evidence, correctness, learner surface, or reviewer lanes when source priority is high-stakes or conflicting. | `source_research`, `evidence`, `correctness`, `learner_surface`, `final_reviewer` |
@@ -98,7 +100,7 @@ Use explicit states whenever readiness matters.
 | --- | --- | --- |
 | `independent_verified` | Required lanes ran through independent workers or live installed roles, parent validated the outputs, and material findings were fixed or recorded as source gaps. | Supports normal readiness when no blocking findings remain. |
 | `fallback_local` | Independent worker tooling was unavailable, blocked, or returned unusable output, so the parent ran the same lane checks locally as separate passes. | Degraded. Not independent verification. |
-| `fallback_local_reviewed` | Artifact-facing name for a locally reviewed fallback state after verifier preflight failed or independent lanes could not run. | Degraded; keep visible in the artifact and final response. |
+| `fallback_local_reviewed` | Artifact-facing name for a locally reviewed fallback state after verifier preflight failed or independent lanes could not run. | Degraded; keep in proof sidecars and the final response, and deliver only after explicit user acceptance. |
 | `baseline_unverified` | Required tooling preflight, lane outputs, proof docs, or parent validation are missing. | Does not support readiness. |
 | `usable_with_recorded_gaps` | A source-pack or artifact can support limited downstream use because gaps are explicit and non-blocking for the requested use. | Usable only with named limitations. |
 

@@ -8,7 +8,7 @@ The command builds a reusable semantic source-pack for a course folder. Original
 
 `$study-forge index` is a two-stage workflow:
 
-1. Run `studyforge-indexer` lanes first. For PDF-heavy or multi-source folders, assign each in-scope file, coherent file bundle, or large-PDF page range to an indexer lane instead of letting the main agent produce a single-agent baseline. Use topics as output from the index, not as the primary sharding key; topic boundaries are discovered after extraction.
+1. Run `studyforge-indexer` lanes first. For PDF-heavy or multi-source folders, assign each in-scope file, file bundle, or page range to an indexer lane instead of letting the main agent produce a single-agent baseline. Use topics as output from the index, not as the primary sharding key; topic boundaries are discovered after extraction.
 2. Run an independent `studyforge-verifier` invocation with lane `source_index` after the indexer handoff. The verifier challenges source inventory, freshness, page accounting, visual interpretation, confidence labels, topic coverage, and downstream fallback behavior.
 
 Follow the shared contract in `skills/references/delegation.md`. The agent decides whether the source scope warrants subagents. PDF-heavy or multi-source folders normally warrant independent `indexer` and `verifier` lanes plus a `source_index` verification lane; do not wait for a second user approval when the active runtime can spawn workers.
