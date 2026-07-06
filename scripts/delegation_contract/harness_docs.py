@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .harness_contract import check_harness_contract, fragment_has_positive_tokens, has_token
+from .harness_contract import check_harness_contract, fragment_has_positive_tokens, has_positive_token
 from .io_utils import read_text
 from .model import Issue, WORKER_SOURCE_WORK_TOKENS
 
@@ -33,7 +33,7 @@ def has_worker_source_work(text: str) -> bool:
 
 
 def check_readme_harness_routing(text: str, path: str, issues: list[Issue]) -> None:
-    if not has_token(text, HARNESS_LAYER_TOKENS):
+    if not has_positive_token(text, HARNESS_LAYER_TOKENS):
         add_missing(path, "missing-readme-harness-layer: README must name OmO/Codex harness routing", issues)
     if not has_conductor(text):
         add_missing(path, "missing-readme-conductor: README must make the main thread the conductor", issues)
@@ -46,7 +46,7 @@ def check_readme_harness_routing(text: str, path: str, issues: list[Issue]) -> N
 
 
 def check_skill_harness_routing(text: str, path: str, issues: list[Issue]) -> None:
-    if not has_token(text, HARNESS_LAYER_TOKENS):
+    if not has_positive_token(text, HARNESS_LAYER_TOKENS):
         add_missing(path, "missing-skill-harness-layer: skill must name OmO/Codex harness routing", issues)
     if not has_conductor(text):
         add_missing(path, "missing-skill-conductor: skill must make the main thread the conductor", issues)

@@ -26,6 +26,7 @@ from .self_test_fixtures import (
     write_valid_fixture,
     write_valid_pack,
 )
+from .self_test_harness_cases import harness_contract_cases, production_harness_cases
 
 
 def remove_delegation(root: Path) -> None:
@@ -34,72 +35,6 @@ def remove_delegation(root: Path) -> None:
 
 def remove_prompt_shape(root: Path) -> None:
     write_file(root, "skills/references/delegation.md", "\n".join((*REQUIRED_SECTIONS, *SHARED_TOKENS)))
-
-
-def remove_harness_layer(root: Path) -> None:
-    path = root / "skills/references/delegation.md"
-    text = path.read_text(encoding="utf-8").replace(
-        "The OmO/Codex harness routes Study Forge work through the active worker runtime.\n",
-        "",
-    )
-    write_file(root, "skills/references/delegation.md", text)
-
-
-def write_parent_dirty_work(root: Path) -> None:
-    path = root / "skills/references/delegation.md"
-    text = path.read_text(encoding="utf-8")
-    write_file(
-        root,
-        "skills/references/delegation.md",
-        f"{text}\nThe parent thread performs broad source extraction and source verification before assigning workers.\n",
-    )
-
-
-def remove_worker_assignment(root: Path) -> None:
-    path = root / "skills/references/delegation.md"
-    text = path.read_text(encoding="utf-8").replace(
-        "Worker prompts are self-contained OmO/Codex assignments.\n",
-        "",
-    )
-    write_file(root, "skills/references/delegation.md", text)
-
-
-def negate_parent_conductor(root: Path) -> None:
-    path = root / "skills/references/delegation.md"
-    text = path.read_text(encoding="utf-8").replace(
-        "The parent thread acts as conductor/orchestrator for Study Forge tasks.",
-        "The parent thread is not the conductor/orchestrator for Study Forge tasks.",
-    )
-    write_file(root, "skills/references/delegation.md", text)
-
-
-def negate_worker_source_work(root: Path) -> None:
-    path = root / "skills/references/delegation.md"
-    text = path.read_text(encoding="utf-8").replace(
-        "Worker lanes own source-heavy work: source extraction, source-pack construction, "
-        + "source indexing, verification, QA, and final review.",
-        "Workers do not extract source evidence, construct source packs, index source records, "
-        + "perform verification, run QA, or perform final review.",
-    )
-    write_file(root, "skills/references/delegation.md", text)
-
-
-def negate_worker_assignment(root: Path) -> None:
-    path = root / "skills/references/delegation.md"
-    text = path.read_text(encoding="utf-8").replace(
-        "Worker prompts are self-contained OmO/Codex assignments.",
-        "Worker prompts are not self-contained OmO/Codex assignments.",
-    )
-    write_file(root, "skills/references/delegation.md", text)
-
-
-def negate_fallback_reviewed_degraded(root: Path) -> None:
-    path = root / "skills/references/delegation.md"
-    text = path.read_text(encoding="utf-8").replace(
-        "fallback_local_reviewed remains degraded local review and is not independent verification.",
-        "fallback_local_reviewed is not degraded local review.",
-    )
-    write_file(root, "skills/references/delegation.md", text)
 
 
 def claim_fallback_independent(root: Path) -> None:
@@ -229,13 +164,9 @@ def expect_artifact_boundary_clean(label: str, learner_html: str, sidecar_proof:
 
 def self_test_cases() -> tuple[FixtureCase, ...]:
     return (
-        FixtureCase("missing-omo-harness-layer-production", remove_harness_layer, "missing-omo-harness-layer"),
+        *production_harness_cases(),
         FixtureCase("missing-delegation", remove_delegation, "missing required file"),
         FixtureCase("missing-worker-prompt-shape", remove_prompt_shape, "missing required token: TASK:"),
-        FixtureCase("negated-parent-conductor", negate_parent_conductor, "missing-parent-conductor"),
-        FixtureCase("negated-worker-source-work", negate_worker_source_work, "missing-worker-source-work"),
-        FixtureCase("negated-worker-prompt-assignment", negate_worker_assignment, "missing-worker-prompt-assignment"),
-        FixtureCase("negated-fallback-reviewed-degraded", negate_fallback_reviewed_degraded, "missing-fallback-reviewed-degraded"),
         FixtureCase("fallback-local-claimed-independent", claim_fallback_independent, "fallback_local claimed"),
         FixtureCase("approval-before-spawn", require_approval, "requires second user approval"),
         FixtureCase("missing-hook-authorization", remove_hook_authorization, f"missing required token: {HOOK_AUTHORIZATION_SENTENCE}"),
@@ -247,18 +178,6 @@ def self_test_cases() -> tuple[FixtureCase, ...]:
         FixtureCase("missing-raw-child-report", write_missing_raw_report_pack, "raw child report path does not exist"),
         FixtureCase("incomplete-tooling-preflight", write_incomplete_preflight_pack, "tooling_preflight.checked"),
         FixtureCase("artifact-audit-heavy-contract", require_audit_heavy_learner_html, "audit scaffold"),
-    )
-
-
-def harness_contract_cases() -> tuple[FixtureCase, ...]:
-    return (
-        FixtureCase("missing-omo-harness-layer", remove_harness_layer, "missing-omo-harness-layer"),
-        FixtureCase("parent-does-source-heavy-work", write_parent_dirty_work, "parent-does-source-heavy-work"),
-        FixtureCase("missing-worker-prompt-assignment", remove_worker_assignment, "missing-worker-prompt-assignment"),
-        FixtureCase("negated-parent-conductor", negate_parent_conductor, "missing-parent-conductor"),
-        FixtureCase("negated-worker-source-work", negate_worker_source_work, "missing-worker-source-work"),
-        FixtureCase("negated-worker-prompt-assignment", negate_worker_assignment, "missing-worker-prompt-assignment"),
-        FixtureCase("negated-fallback-reviewed-degraded", negate_fallback_reviewed_degraded, "missing-fallback-reviewed-degraded"),
     )
 
 

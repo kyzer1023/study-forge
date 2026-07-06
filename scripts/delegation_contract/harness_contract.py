@@ -28,11 +28,20 @@ CONTRACT_NEGATORS = (
     "are not",
 )
 WORKER_OWNS_SOURCE_WORK = (
-    "workers do",
     "workers own",
     "workers must own",
-    "worker lanes do",
     "worker lanes own",
+)
+PARENT_DELEGATES_SOURCE_WORK = (
+    "parent may route",
+    "parent routes",
+    "parent thread routes",
+    "main thread routes",
+    "parent may shard",
+    "parent assigns",
+    "main thread assigns",
+    "parent delegates",
+    "main thread delegates",
 )
 FALLBACK_REVIEWED_CONTRADICTIONS = (
     "not degraded",
@@ -76,9 +85,17 @@ def term_is_negated(text: str, term: str) -> bool:
     lowered = text.casefold()
     folded_term = term.casefold()
     for match in re.finditer(re.escape(folded_term), lowered):
-        prefix = lowered[max(0, match.start() - 40):match.start()]
+        prefix = lowered[max(0, match.start() - 80):match.start()]
         if re.search(NEGATION_PATTERN, prefix):
             return True
+        for negator in CONTRACT_NEGATORS:
+            negator_pattern = rf"\b{re.escape(negator)}\b"
+            for negator_match in re.finditer(negator_pattern, prefix):
+                bridge = prefix[negator_match.end():]
+                if re.search(r"\b(but|however|though|although|while)\b", bridge):
+                    continue
+                if len(re.findall(r"\w+", bridge)) <= 5:
+                    return True
     return False
 
 
@@ -94,6 +111,15 @@ def fragment_has_positive_tokens(text: str, required: Sequence[str], alternative
         has_required = all(token in lowered for token in folded_required)
         has_alternative = any(token in lowered for token in folded_alternatives)
         if has_required and has_alternative and not contract_terms_are_negated(fragment, (*required, *alternatives)):
+            return True
+    return False
+
+
+def has_positive_token(text: str, tokens: Sequence[str]) -> bool:
+    folded_tokens = tuple(token.casefold() for token in tokens)
+    for fragment in fragments(text):
+        lowered = fragment.casefold()
+        if any(token in lowered and not term_is_negated(fragment, token) for token in folded_tokens):
             return True
     return False
 
@@ -117,13 +143,14 @@ def parent_claims_dirty_work(line: str) -> bool:
         negated = any(negator in lowered for negator in PARENT_SOURCE_WORK_NEGATORS)
         source_work = any(claim in lowered for claim in PARENT_SOURCE_WORK_CLAIMS)
         worker_owns_source_work = any(phrase in lowered for phrase in WORKER_OWNS_SOURCE_WORK)
-        if parent_named and source_work and not negated and not worker_owns_source_work:
+        parent_delegates = any(phrase in lowered for phrase in PARENT_DELEGATES_SOURCE_WORK)
+        if parent_named and source_work and not negated and not worker_owns_source_work and not parent_delegates:
             return True
     return False
 
 
 def check_harness_contract(text: str, relative_path: str, issues: list[Issue]) -> None:
-    if not has_token(text, HARNESS_LAYER_TOKENS):
+    if not has_positive_token(text, HARNESS_LAYER_TOKENS):
         issues.append(Issue(
             relative_path,
             "missing-omo-harness-layer: docs must name OmO/Codex harness orchestration",
