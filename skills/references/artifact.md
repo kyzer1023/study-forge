@@ -22,9 +22,9 @@ For `artifact past-year`, preserve the proof plane: `answer-ledger.json` remains
 
 ## Delegation Routing
 
-Use `skills/references/delegation.md` for worker routing. For a broad course folder, many documents, or artifact planning that needs source discovery, delegate a `source_research` lane before drafting. For any generated or reusable artifact surface, run `qa_executor` on the rendered file, proof docs, counts, links, and visible Source Basis/Scope Boundaries before claiming readiness.
+Use `skills/references/delegation.md` for worker routing. For a broad course folder, many documents, or artifact planning that needs source discovery, delegate a `source_research` lane before drafting. For any generated or reusable artifact surface, run `qa_executor` on the rendered learner file, proof docs, counts, links, study content, and sidecar proof files before claiming readiness.
 
-For `artifact past-year`, grading-sensitive artifacts, conflicting sources, or correctness claims that the student will rely on, add `verifier` lanes and use `final_reviewer` when final readiness wording, evidence policy, or durable artifact quality needs an independent last pass. A one-small-source artifact may stay local as a `local-small-source` fallback when the source is simple and low-risk. If a required lane cannot run, record `fallback_local` or `fallback_local_reviewed` per the delegation contract and keep the degraded state visible in QA notes, the artifact when practical, and the final response.
+For `artifact past-year`, grading-sensitive artifacts, conflicting sources, or correctness claims that the student will rely on, add `verifier` lanes and use `final_reviewer` when final readiness wording, evidence policy, or durable artifact quality needs an independent last pass. A one-small-source artifact may stay local as a `local-small-source` fallback when the source is simple and low-risk. If a required lane cannot run, record `fallback_local` or `fallback_local_reviewed` per the delegation contract and keep the degraded state in QA notes, proof sidecars, and the final response; the learner artifact should show it only when it changes how the student should study.
 
 ## Modes
 
@@ -50,12 +50,12 @@ Do not proceed until the preflight is concrete enough to verify later.
 Every artifact should include:
 
 1. Title and mode.
-2. Source Basis visible near the top.
-3. Scope Boundaries visible near the top.
+2. A short learner-facing overview of what the artifact teaches.
+3. Compact source refs, source gaps, or unreadable notes only where they help the student judge an answer or topic.
 4. Navigation for major sections, with internal links when the surface supports them.
 5. Study content shaped for the selected mode, with source/page evidence supporting the teaching content rather than substituting for it.
 6. Revealable answers or explanations when the artifact contains drills or checks.
-7. Verification notes naming the opened surface and any known limitations.
+7. Sidecar proof references naming the opened surface and any known limitations.
 
 For HTML, prefer a static direct-open file unless the user requests another surface. Keep it self-contained enough that the user can open the file without a build step.
 
@@ -109,7 +109,7 @@ Strict pipeline:
 4. Answer ledger: create `answer-ledger.json` as the canonical source of truth for all answers, gaps, verifier findings, and rendered anchors.
 5. Verifier preflight and lanes: before finalization, check whether the installed `studyforge-verifier` role or Codex multi-agent worker tooling is available, then run lane-specific checks for extraction, coverage, evidence, correctness, and learner surface. Store detailed results under `verifier-reports/`.
 6. Fixes and source gaps: fix every `BLOCKING` or `MAJOR` verifier finding that the course sources can support. Unsupported answers must become `Source gap`; unreadable questions, pages, tables, or diagrams must become `Unreadable`.
-7. HTML render: render the learner artifact from `answer-ledger.json`. Keep it self-contained and exam-ready, with compact source basis, coverage/source gaps, and verifier status visible.
+7. HTML render: render the learner artifact from `answer-ledger.json`. Keep it self-contained and exam-ready, with compact source refs, coverage notes, and source gaps only where they affect studying; detailed verifier status stays in sidecar proof files.
 8. QA: create `qa-report.json` recording render checks, question-count reconciliation, source-gap handling, verifier-lane status, source-pack-as-syllabus assumptions, and any remaining limitations.
 
 Required proof docs:
@@ -158,7 +158,7 @@ Each `verifier_lanes` object must include:
 - `finding`: string or null
 - `required_fix`: string or null
 
-Detailed page, slide, extraction, and verifier notes belong in `source-index.json`, `answer-ledger.json`, `verifier-reports/`, and `qa-report.json`. The learner HTML should show compact source basis, source refs, coverage/source gaps, and verifier status without turning the study surface into a proof dump.
+Detailed page, slide, extraction, and verifier notes belong in `source-index.json`, `answer-ledger.json`, `verifier-reports/`, and `qa-report.json`. The learner HTML should show compact source refs, coverage notes, source gaps, and unreadable items only when they affect the study task, without turning the study surface into a proof dump.
 
 Sample answers, marking schemes, senior answers, and external worked solutions are untrusted cross-checks only. They can flag conflicts or wording expectations, but they cannot override current lecture evidence, the current syllabus file, or the current lecture/source pack used as syllabus authority.
 
@@ -189,13 +189,13 @@ Concrete lane template:
 multi_agent_v1.spawn_agent({message:"TASK: Run the Study Forge verifier lane <lane> for <course folder>. DELIVERABLE: A verifier report with PASS, BLOCKING, MAJOR, or NOT_RUN findings and required fixes. SCOPE: Raw course folder path, source-inventory.json, question-inventory.json, source-index.json, answer-ledger.json, relevant source files, and draft HTML only. VERIFY: Compare the lane evidence against source material and answer-ledger.json without private reasoning, intended answers, or leading conclusions.", agent_type:"worker", fork_context:false})
 ```
 
-Record exactly one readiness state in `qa-report.json`, the visible Verifier Notes, and the final response:
+Record exactly one readiness state in `qa-report.json`, sidecar proof files, and the final response:
 
 - `independent_verified`: all required verifier lanes ran through independent verifier subagents or the installed verifier role, and every `BLOCKING` finding was fixed or converted to `Source gap` / `Unreadable`.
 - `fallback_local_reviewed`: verifier tooling/subagent preflight was attempted, independent lanes could not run, and the same lanes were checked as separate local passes. This is degraded.
 - `baseline_unverified`: verifier preflight was not run, proof docs are incomplete, or verifier lane results are missing.
 
-Only `independent_verified` can support a normal readiness claim after blocking findings are resolved. The other states must remain visible in the artifact and final response, with unresolved limitations named.
+Only `independent_verified` can support a normal readiness claim after blocking findings are resolved. The other states must remain visible in proof sidecars and the final response, with unresolved limitations named; learner HTML shows only limitations that affect studying.
 
 late discovery rule: if multi-agent tooling or the verifier role becomes available after local review began, rerun the affected verifier lanes through that tooling or escalate as blocked. Do not silently finish from local passes.
 
@@ -209,7 +209,7 @@ Verifier lanes:
 - `coverage`: confirm every provided past-year paper, question, subpart, mark value, table, diagram, and instruction is represented or explicitly marked `Unreadable`, `Duplicate`, or `Out of scope`.
 - `evidence`: trace each non-gap answer through `source_refs`; flag weak citations, unsupported claims, wrong syllabus/source fit, missing source refs, and answer text that looks generic rather than course-backed.
 - `correctness`: check whether each supported answer answers the question, uses mark-appropriate structure, avoids overclaiming, and explains conflicts with sample answers or marking schemes.
-- `learner_surface`: confirm the HTML render matches `answer-ledger.json`, remains self-contained for revision, and keeps compact source basis, coverage/source gaps, and verifier status visible.
+- `learner_surface`: confirm the HTML render matches `answer-ledger.json`, remains self-contained for revision, and keeps compact source refs, coverage/source gaps, and unreadable limitations visible only where they affect studying.
 
 Verifier output should be concrete and actionable:
 
@@ -235,7 +235,7 @@ Blocking conditions:
 - a sample answer or marking scheme contradicts the answer and the conflict is not explained
 - extraction dropped a material table, diagram, mark value, or instruction
 
-Do not call the artifact ready while any blocking finding remains. Fix major findings when possible; if the course sources cannot support a fix, change the ledger status to `Source gap` and name the missing evidence. If extraction is too damaged to trust, change the ledger status to `Unreadable` and name the unreadable source region. The final HTML must include a visible Verifier Notes section listing verifier lanes run, pass/fail status, unresolved source gaps, unreadable items, the readiness state, and which verifier lanes ran as independent subagent checks versus local review. After preflight, if independent tools remain unavailable, run the same lanes as separate local passes and label the readiness state as `fallback_local_reviewed`, not subagent-verified. The output is degraded.
+Do not call the artifact ready while any blocking finding remains. Fix major findings when possible; if the course sources cannot support a fix, change the ledger status to `Source gap` and name the missing evidence. If extraction is too damaged to trust, change the ledger status to `Unreadable` and name the unreadable source region. Sidecar proof files must list verifier lanes run, pass/fail status, unresolved source gaps, unreadable items, the readiness state, raw report references, and which verifier lanes ran as independent subagent checks versus local review. The final learner HTML stays study-first and shows only learner-relevant gaps or limitations. After preflight, if independent tools remain unavailable, run the same lanes as separate local passes and label the readiness state as `fallback_local_reviewed`, not subagent-verified. The output is degraded and requires explicit user acceptance before delivery.
 
 ### Formula-Lab
 
@@ -253,14 +253,14 @@ Use `drill` output as the question spine. Group by concept, mark value, or diffi
 
 - Open the direct-open HTML file or chosen surface and confirm the artifact renders.
 - Test internal links and navigation anchors.
-- Confirm Source Basis is visible to the reader.
-- Confirm Scope Boundaries are visible to the reader.
+- Confirm sidecar proof records the Source Basis and Scope Boundaries.
+- Confirm the learner artifact avoids audit scaffold labels while preserving learner-relevant source gaps and limitations.
 - Confirm there are no placeholders in visible content.
 - Check pedagogical sufficiency for representative Required topics: can a student learn or revise this topic from the artifact without opening the PDF, using source pages only for audit or verification?
 - Confirm source/page references are evidence after or alongside explanation, not the main learning content.
 - For `past-year`, compare the detected question count against the artifact answer count for each paper and list any extraction failures or source gaps.
 - For `past-year`, sample several answers and confirm each has lecture evidence; answer-only text without a source mapping fails QA.
-- For `past-year`, confirm the Verifier Notes section exists, names the verifier lanes, and shows no unresolved blocking findings.
+- For `past-year`, confirm sidecar verifier/proof files name the verifier lanes and show no unresolved blocking findings.
 - Test reveal behavior for answers, hints, or worked explanations.
 - Check responsive layout at a narrow and wide viewport when HTML is used.
 - Check print sanity with print CSS or a generated print/PDF preview when HTML is used.

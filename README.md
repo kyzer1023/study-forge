@@ -63,6 +63,8 @@ All commands run through `$study-forge`:
 | `$study-forge sheet` | Create a condensed revision sheet from source materials |
 | `$study-forge artifact` | Create a source-backed study artifact; defaults to `atlas` when no mode is given; use `past-year` for verifier-checked lecture-grounded past-paper answer packs |
 
+Learner HTML for `atlas` and `past-year` is study-first by default. Full Source Basis, Scope Boundaries, Verification Notes, manual QA results, lane evidence, and raw report references belong in sidecar proof files such as `qa-report.json`, `verifier-reports/`, and `answer-ledger.json`; the learner page shows only source gaps, unreadable notes, or limitations that affect studying.
+
 ### Usage Examples
 
 ```text
