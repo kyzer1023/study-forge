@@ -27,6 +27,22 @@ CONTRACT_NEGATORS = (
     "is not",
     "are not",
 )
+POST_TERM_NEGATION_PATTERNS = (
+    "is not",
+    "are not",
+    "was not",
+    "were not",
+    "does not",
+    "do not",
+    "did not",
+    "cannot",
+    "can't",
+    "must not",
+    "not used",
+    "not use",
+    "not routed",
+    "not route",
+)
 WORKER_OWNS_SOURCE_WORK = (
     "workers own",
     "workers must own",
@@ -96,6 +112,11 @@ def term_is_negated(text: str, term: str) -> bool:
                     continue
                 if len(re.findall(r"\w+", bridge)) <= 5:
                     return True
+        suffix = lowered[match.end():match.end() + 80]
+        for negator in POST_TERM_NEGATION_PATTERNS:
+            suffix_match = re.search(rf"^\W*(?:\w+\W+){{0,4}}{re.escape(negator)}\b", suffix)
+            if suffix_match and not re.search(r"\b(but|however|though|although|while)\b", suffix[:suffix_match.start()]):
+                return True
     return False
 
 
