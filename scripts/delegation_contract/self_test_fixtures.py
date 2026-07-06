@@ -106,14 +106,14 @@ def write_valid_fixture(root: Path) -> None:
         + "no delegation, or otherwise restricts tool use, record fallback_local instead."
     )
     harness_lines = (
-        "Study Forge uses the OmO/Codex harness as the orchestration layer.",
+        "The OmO/Codex harness routes Study Forge work through the active worker runtime.",
         "Study Forge does not implement a runtime or bespoke runtime; "
         + "it owns study semantics, proof contracts, artifact schemas, fallback labels, and validators.",
-        "The parent thread is the conductor/orchestrator for Study Forge tasks.",
-        "Workers do source-heavy dirty work: source extraction, source-pack construction, "
+        "The parent thread acts as conductor/orchestrator for Study Forge tasks.",
+        "Worker lanes own source-heavy work: source extraction, source-pack construction, "
         + "source indexing, verification, QA, and final review.",
-        "Worker prompt examples are self-contained OmO/Codex assignments.",
-        "fallback_local_reviewed is degraded and not independent verification.",
+        "Worker prompts are self-contained OmO/Codex assignments.",
+        "fallback_local_reviewed remains degraded local review and is not independent verification.",
     )
     delegation = "\n".join((
         *REQUIRED_SECTIONS,
@@ -128,14 +128,14 @@ def write_valid_fixture(root: Path) -> None:
     write_file(root, "skills/references/delegation.md", delegation)
     skill_routing = (
         "references/delegation.md source-heavy second user approval validates worker output "
-        + "OmO/Codex harness main thread conducts Workers do source-heavy dirty work "
-        + "index first and source-pack first Source gap "
+        + "OmO/Codex harness main thread acts as conductor while worker lanes own source extraction "
+        + "Run index first and use source-pack first. Preserve Source gap "
         + f"{hook_line}"
     )
     write_file(root, "skills/SKILL.md", skill_routing)
     readme_routing = (
         "Study Forge uses the portable OmO/Codex harness. "
-        + "The main thread conducts and Workers do source-heavy dirty work. "
+        + "The main thread acts as conductor while worker lanes own source extraction. "
         + "Course folder workflows run index first and source-pack first."
     )
     write_file(root, "README.md", readme_routing)
