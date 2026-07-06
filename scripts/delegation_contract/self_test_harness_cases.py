@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 from .io_utils import write_file
@@ -33,6 +34,16 @@ def negate_delegation_harness_layer_after_token(root: Path) -> None:
     write_file(root, "skills/references/delegation.md", text)
 
 
+def write_valid_delegation_runtime_disclaimer(root: Path) -> None:
+    path = root / "skills/references/delegation.md"
+    text = path.read_text(encoding="utf-8").replace(
+        "The OmO/Codex harness routes Study Forge work through the active worker runtime.",
+        "The OmO/Codex harness is not a bespoke runtime; "
+        + "it routes Study Forge worker assignments through the active worker runtime.",
+    )
+    write_file(root, "skills/references/delegation.md", text)
+
+
 def negate_readme_harness_layer(root: Path) -> None:
     write_file(
         root,
@@ -53,6 +64,16 @@ def negate_readme_harness_layer_after_token(root: Path) -> None:
     )
 
 
+def write_valid_readme_runtime_disclaimer(root: Path) -> None:
+    write_file(
+        root,
+        "README.md",
+        "The OmO/Codex harness is not a bespoke runtime; it routes Study Forge worker assignments. "
+        + "The main thread acts as conductor while worker lanes own source extraction. "
+        + "Course folder workflows run index first and source-pack first.",
+    )
+
+
 def negate_skill_harness_layer(root: Path) -> None:
     path = root / "skills/SKILL.md"
     text = path.read_text(encoding="utf-8").replace(
@@ -67,6 +88,16 @@ def negate_skill_harness_layer_after_token(root: Path) -> None:
     text = path.read_text(encoding="utf-8").replace(
         "OmO/Codex harness main thread acts as conductor",
         "OmO/Codex harness is not used for orchestration. main thread acts as conductor",
+    )
+    write_file(root, "skills/SKILL.md", text)
+
+
+def write_valid_skill_runtime_disclaimer(root: Path) -> None:
+    path = root / "skills/SKILL.md"
+    text = path.read_text(encoding="utf-8").replace(
+        "OmO/Codex harness main thread acts as conductor",
+        "OmO/Codex harness is not a bespoke runtime; "
+        + "it routes worker assignments. main thread acts as conductor",
     )
     write_file(root, "skills/SKILL.md", text)
 
@@ -166,4 +197,12 @@ def harness_contract_cases() -> tuple[FixtureCase, ...]:
         FixtureCase("negated-worker-source-work", negate_worker_source_work, "missing-worker-source-work"),
         FixtureCase("negated-worker-prompt-assignment", negate_worker_assignment, "missing-worker-prompt-assignment"),
         FixtureCase("negated-fallback-reviewed-degraded", negate_fallback_reviewed_degraded, "missing-fallback-reviewed-degraded"),
+    )
+
+
+def clean_harness_cases() -> tuple[tuple[str, Callable[[Path], None]], ...]:
+    return (
+        ("valid-delegation-runtime-disclaimer", write_valid_delegation_runtime_disclaimer),
+        ("valid-readme-runtime-disclaimer", write_valid_readme_runtime_disclaimer),
+        ("valid-skill-runtime-disclaimer", write_valid_skill_runtime_disclaimer),
     )

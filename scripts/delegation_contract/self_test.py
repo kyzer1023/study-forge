@@ -26,7 +26,7 @@ from .self_test_fixtures import (
     write_valid_fixture,
     write_valid_pack,
 )
-from .self_test_harness_cases import harness_contract_cases, production_harness_cases
+from .self_test_harness_cases import clean_harness_cases, harness_contract_cases, production_harness_cases
 
 
 def remove_delegation(root: Path) -> None:
@@ -142,6 +142,20 @@ def expect_direct_issue(case: FixtureCase, collect_issues: Callable[[Path], tupl
     return False
 
 
+def expect_clean_fixture(label: str, mutate: Callable[[Path], None]) -> bool:
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        write_valid_fixture(root)
+        mutate(root)
+        issues = validate(root)
+    if not issues:
+        print(f"SELF-TEST GREEN {label}: PASS")
+        return True
+    print(f"FAIL self-test {label}: expected clean fixture")
+    print_result(issues)
+    return False
+
+
 def expect_artifact_boundary_issue(label: str, learner_html: str, sidecar_proof: JsonObject | None, expected: str) -> bool:
     issues = artifact_boundary_issues(label, learner_html, sidecar_proof)
     if any(expected in issue.detail for issue in issues):
@@ -191,6 +205,8 @@ def run_self_test() -> int:
     if not all(expect_direct_issue(case, delegation_harness_issues) for case in harness_contract_cases()):
         return 1
     if not all(expect_direct_issue(case, truthfulness_issues) for case in truthfulness_cases()):
+        return 1
+    if not all(expect_clean_fixture(label, mutate) for label, mutate in clean_harness_cases()):
         return 1
     if not all(expect_issue(case) for case in self_test_cases()):
         return 1
