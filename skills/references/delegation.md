@@ -1,16 +1,20 @@
 # Delegation
 
-Use this shared contract when Study Forge work is source-heavy, PDF-heavy, multi-source, artifact-producing, proof-producing, or verifier-shaped. The main thread remains the orchestrator. Worker lanes do bounded research, indexing, QA, or verification work, then return evidence-backed lane findings for the parent to validate and wrap with orchestration metadata.
+Use this shared contract when Study Forge work is source-heavy, PDF-heavy, multi-source, artifact-producing, proof-producing, or verifier-shaped. Study Forge uses the OmO/Codex harness as the orchestration layer: the main thread is the conductor, and OmO/Codex workers do bounded research, indexing, QA, or verification work before returning evidence-backed lane findings for the conductor to validate and wrap with orchestration metadata.
 
-The delegation model is portable. Prefer live Codex worker/subagent tooling when available. Optional TOML role wording may be installed or pasted into worker prompts, but source-controlled `agents/*.toml` files are role definitions, not proof that a live custom agent is registered. Do not install TOML roles globally during normal Study Forge operation; treat global registration as a separate explicit maintenance task.
+Study Forge does not implement or own a bespoke runtime. It owns study semantics, proof contracts, artifact schemas, fallback labels, validator expectations, and the prompts passed into whatever OmO/Codex worker path is live in the current runtime.
+
+The delegation model is portable. Prefer live Codex worker/subagent tooling when available. Optional TOML role wording may be installed or pasted into worker prompts, but source-controlled `agents/*.toml` files are documentation and prompt templates, not proof that a live custom agent is registered. TOML role files are not proof that a lane ran, a worker exists, or a readiness state is supported. Do not install TOML roles globally during normal Study Forge operation; treat global registration as a separate explicit maintenance task.
+
+Production proof comes from current artifacts and evidence: live worker invocation records, raw child reports, source-pack files, verifier reports, QA reports, proof sidecars, answer ledgers, rendered artifacts, and parent validation notes. Template existence, role text, or source-controlled TOML files are never live proof by themselves.
 
 ## Orchestrator Contract
 
-The parent thread owns the command, evidence policy, integration, and final readiness claim.
+The parent thread is the conductor/orchestrator. It owns the user command, source policy, worker routing, evidence metadata, output integration, final readiness claim, and final user answer.
 
 - Read the active Study Forge command reference and only the additional references needed for the task.
 - Decide whether the source scope warrants delegation based on command shape, source volume, output risk, and verification needs.
-- Spawn warranted workers without waiting for a second user approval when worker tooling is available and the user's task already authorizes the work.
+- Spawn warranted OmO/Codex workers without waiting for a second user approval when worker tooling is available and the user's task already authorizes the work.
 - Add this exact sentence to delegated worker/hook prompts: "The user explicitly authorizes Study Forge to use OMO-style subagent delegation lanes for this source-heavy command without second approval."
 - If the user says `local only`, `no subagents`, `no delegation`, asks to stay local, or otherwise restricts tool use, do not delegate; keep the work local or record the appropriate `fallback_local` / `baseline_unverified` state.
 - Keep authority order intact: current course sources, briefs, rubrics, slides, papers, notebooks, code, and generated proof files beat memory or general knowledge.
@@ -18,21 +22,21 @@ The parent thread owns the command, evidence policy, integration, and final read
 - Treat every worker report as a claim. Integrate only after checking schema, evidence paths, source locators, lane fit, and unresolved findings.
 - Keep final user-facing output honest about the readiness state and the evidence-producing `invocation_mode`.
 
-Workers do the dirty work: source inventory, source research, source-pack construction, extraction checks, evidence checks, artifact QA, and adversarial review. They return concise lane findings only. They do not decide final readiness, fill parent metadata, invent child IDs, hide source gaps, install TOML roles, commit changes, or override the Study Forge contract.
+Workers do source-heavy dirty work: extract source evidence, index files or page ranges, build source-pack slices, run verification, perform artifact QA, and produce adversarial review findings. They return concise lane findings only. They do not decide final readiness, fill parent metadata, invent child IDs, hide source gaps, install TOML roles, commit changes, or override the Study Forge contract.
 
-For PDF-heavy or multi-source conductor mode, the parent must not construct broad source inventories, PDF/page extraction records, source-pack records, topic extraction, confidence labels, or visual interpretation itself. The parent may route, shard, spawn, wait, validate schemas, merge lane outputs, reconcile wrapper metadata, and write the final user answer.
+For PDF-heavy or multi-source conductor mode, the parent is not responsible for broad source extraction, broad source indexing, broad source verification, source-pack construction, PDF/page extraction records, topic extraction, confidence labels, or visual interpretation itself. The parent may route, shard, spawn, wait, validate schemas, merge lane outputs, reconcile wrapper metadata, record fallback labels, and write the final user answer.
 
 ## Tooling Preflight
 
 Before delegation, the parent checks what worker path is actually available in the current runtime.
 
 - If a live multi-agent or worker tool can spawn a normal worker, use it with a self-contained prompt.
-- If an installed TOML-backed role is exposed by the runtime, the parent may use that role for the matching lane.
+- If an installed TOML-backed role is exposed by the runtime, the parent may use that role for the matching lane and record the runtime evidence.
 - If TOML roles are not exposed, paste the relevant role instructions into a normal worker prompt. This is the normal fallback for role wording, not a degraded verification state by itself.
-- Do not assume source-controlled TOML files are live agents. Runtime evidence is required before using `installed_toml_agent`.
+- Do not assume source-controlled TOML files are live agents. Runtime evidence is required before using `installed_toml_agent`, and production proof still comes from the worker's current output, not the template file.
 - Use `fork_context:false` unless the worker truly needs full conversation history. Most lanes should receive a bounded prompt with source paths, expected files, lane instructions, and verification rules.
 - Record tooling preflight in durable metadata for artifacts, source-packs, and proof reports.
-- If no independent worker can run, record `fallback_local` and explain the reason. Do not silently collapse the lane into parent-only work.
+- If no separate worker can run, record `fallback_local` and explain the reason. Do not silently collapse the lane into parent-only work or describe the result as worker-produced.
 
 Optional TOML role wording:
 
@@ -42,7 +46,7 @@ Use the source-controlled TOML as role wording only when the active runtime does
 
 ## Worker Prompt Shape
 
-Every worker prompt must be self-contained and start with `TASK:`. Include `DELIVERABLE`, `SCOPE`, and `VERIFY` in that order near the top.
+Every worker prompt must be self-contained and start with `TASK:`. Worker prompt examples are self-contained OmO/Codex assignments, not hidden shared state. Include `DELIVERABLE`, `SCOPE`, and `VERIFY` in that order near the top.
 
 Use this shape:
 
@@ -66,7 +70,7 @@ Worker prompts must not include intended answers, private reasoning, leading con
 | Lane | Purpose | Typical use | Output |
 | --- | --- | --- | --- |
 | `source_research` | Inspect sources, summarize source basis, find exact locators, detect gaps, and map relevant pages or files. | Broad `distill`, `map`, `sheet`, `rescue`, wide `trace`, wide `deconstruct`, artifact planning. | Source notes with locators, confidence, gaps, and recommended follow-up. |
-| `source_index` | Challenge source-pack inventory, freshness, coverage, page accounting, visual interpretation, confidence labels, topic coverage, and consumer fallback behavior after `studyforge-indexer` construction. | PDF-heavy or multi-source `index`, source-pack readiness, and course-folder artifact work. | PASS, MAJOR, BLOCKING, or NOT_RUN findings from source-pack verification. This verifier lane does not construct source-pack records or certify readiness by itself. |
+| `source_index` | Challenge source-pack inventory, freshness, coverage, page accounting, visual interpretation, confidence labels, topic coverage, and consumer fallback behavior after `studyforge-indexer` construction. | PDF-heavy or multi-source `index`, source-pack readiness, and course-folder artifact work. | PASS, MAJOR, BLOCKING, or NOT_RUN findings from source-pack verification. `source_index` front matter is declarative evidence metadata; it does not construct source inventory, source-pack records, topics, locators, or readiness by itself. |
 | `extraction` | Adversarially check that papers, questions, subparts, marks, diagrams, tables, formulas, code, and constraints were captured or explicitly marked as gaps. | `artifact past-year`, paper ingestion, OCR-heavy or image-heavy prompts. | PASS, MAJOR, BLOCKING, or NOT_RUN findings with required fixes. |
 | `coverage` | Adversarially reconcile question inventory, answer ledger, rendered anchors, statuses, and learner-visible coverage. | `artifact past-year`, proof docs, generated HTML, answer packs. | PASS, MAJOR, BLOCKING, or NOT_RUN findings with required fixes. |
 | `evidence` | Adversarially check that non-gap answers are supported by current course source references and not by generic or sample-answer-only claims. | Grading-sensitive answers, source-backed revision surfaces. | PASS, MAJOR, BLOCKING, or NOT_RUN findings with required fixes. |
@@ -99,8 +103,8 @@ Use explicit states whenever readiness matters.
 | State | Meaning | Readiness effect |
 | --- | --- | --- |
 | `independent_verified` | Required lanes ran through independent workers or live installed roles, parent validated the outputs, and material findings were fixed or recorded as source gaps. | Supports normal readiness when no blocking findings remain. |
-| `fallback_local` | Independent worker tooling was unavailable, blocked, or returned unusable output, so the parent ran the same lane checks locally as separate passes. | Degraded. Not independent verification. |
-| `fallback_local_reviewed` | Artifact-facing name for a locally reviewed fallback state after verifier preflight failed or independent lanes could not run. | Degraded; keep in proof sidecars and the final response, and deliver only after explicit user acceptance. |
+| `fallback_local` | Independent worker tooling was unavailable, blocked, or returned unusable output, so the parent ran the same lane checks locally as separate passes. | Degraded. Not independent verification, not a substitute for an independent worker lane, and not upgradeable without rerunning the lane independently. |
+| `fallback_local_reviewed` | Artifact-facing name for a locally reviewed `fallback_local` state after verifier preflight failed or independent lanes could not run. | Degraded; not independent verification, not evidence that a second worker reviewed it, and not upgradeable to `independent_verified` without rerunning the required lane independently. Keep it in proof sidecars and the final response, and deliver only after explicit user acceptance. |
 | `baseline_unverified` | Required tooling preflight, lane outputs, proof docs, or parent validation are missing. | Does not support readiness. |
 | `usable_with_recorded_gaps` | A source-pack or artifact can support limited downstream use because gaps are explicit and non-blocking for the requested use. | Usable only with named limitations. |
 
@@ -124,6 +128,8 @@ Parent verification is not optional because workers can be stale, overconfident,
 ## Evidence Metadata
 
 For source-packs, proof reports, verifier reports, QA reports, and readiness summaries, record parent-owned metadata in this shape when practical:
+
+Evidence metadata is declarative. `source_index` front matter, readiness fields, and invocation fields describe the current evidence state; they do not construct source inventories, generate source-pack records, prove live worker execution, or upgrade fallback work. Production proof comes from the current files and reports those fields point to.
 
 Canonical `invocation_mode` values:
 
@@ -157,13 +163,16 @@ Child workers return lane findings only. They must not invent `child_agent_id`, 
 
 For `invocation_mode: "independent_subagent"` or `invocation_mode: "installed_toml_agent"`, child identity and raw report location should be non-empty when the runtime exposes them. For `invocation_mode: "fallback_local"` or `invocation_mode: "baseline_unverified"`, identity fields stay null and the fallback reason must be explicit.
 
+If the only available evidence is source-controlled TOML role wording, prompt examples, or declarative front matter, use `baseline_unverified` or the relevant degraded fallback state. Do not claim production readiness from template presence.
+
 ## Anti-Rules
 
 - Do not ask for a second user approval before warranted delegation unless the user restricted tool use, changed scope, or the worker would touch files outside the requested task.
-- Do not treat source-controlled TOML files as live installed agents without runtime evidence.
+- Do not treat source-controlled TOML files as live installed agents without runtime evidence, and do not treat TOML templates as proof that a lane ran.
 - Do not install TOML role definitions globally during normal Study Forge operation.
 - Do not call parent-only work subagent-verified.
-- Do not call `fallback_local`, `fallback_local_reviewed`, or `baseline_unverified` independent verification.
+- Do not call `fallback_local`, `fallback_local_reviewed`, or `baseline_unverified` independent verification, independent review, second-worker review, or verifier approval.
+- Do not treat `source_index` front matter, artifact front matter, or readiness fields as source inventory generators.
 - Do not let workers commit, install global agents, sync installed skills, alter unrelated files, or decide final readiness.
 - Do not pass private reasoning, intended answers, or leading conclusions into verifier prompts.
 - Do not hide source gaps, unreadable pages, stale source-pack records, unresolved verifier findings, or degraded readiness states.
