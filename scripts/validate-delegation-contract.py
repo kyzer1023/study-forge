@@ -804,7 +804,7 @@ def run_self_test() -> int:
         return 1
     if not expect_artifact_boundary_issue("artifact-sidecar-missing-proof", audit_free_html, missing_sidecar, "sidecar proof missing field"):
         return 1
-    if not expect_artifact_boundary_clean("audit-free-learner", audit_free_html, sidecar_proof):
+    if not expect_artifact_boundary_clean("audit-free-learner artifact-sidecar-proof", audit_free_html, sidecar_proof):
         return 1
     hook_ok = True
     for command in DELEGATED_EXERCISE_COMMANDS:
