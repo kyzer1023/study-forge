@@ -191,6 +191,7 @@ def expect_artifact_boundary_clean(label: str, learner_html: str, sidecar_proof:
 
 def self_test_cases() -> tuple[FixtureCase, ...]:
     return (
+        FixtureCase("missing-omo-harness-layer-production", remove_harness_layer, "missing-omo-harness-layer"),
         FixtureCase("missing-delegation", remove_delegation, "missing required file"),
         FixtureCase("missing-worker-prompt-shape", remove_prompt_shape, "missing required token: TASK:"),
         FixtureCase("fallback-local-claimed-independent", claim_fallback_independent, "fallback_local claimed"),

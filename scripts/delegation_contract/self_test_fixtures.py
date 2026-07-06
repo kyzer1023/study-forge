@@ -128,10 +128,17 @@ def write_valid_fixture(root: Path) -> None:
     write_file(root, "skills/references/delegation.md", delegation)
     skill_routing = (
         "references/delegation.md source-heavy second user approval validates worker output "
-        + "OmO/Codex harness parent thread conductor workers do source-heavy dirty work "
+        + "OmO/Codex harness main thread conducts Workers do source-heavy dirty work "
+        + "index first and source-pack first Source gap "
         + f"{hook_line}"
     )
     write_file(root, "skills/SKILL.md", skill_routing)
+    readme_routing = (
+        "Study Forge uses the portable OmO/Codex harness. "
+        + "The main thread conducts and Workers do source-heavy dirty work. "
+        + "Course folder workflows run index first and source-pack first."
+    )
+    write_file(root, "README.md", readme_routing)
     for relative_path, tokens in COMMAND_REQUIREMENTS.items():
         write_command_reference(root, relative_path, tokens)
     write_valid_pack(root)

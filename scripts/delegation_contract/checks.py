@@ -4,6 +4,7 @@ from pathlib import Path
 import tomllib
 from collections.abc import Sequence
 
+from .harness_contract import check_harness_contract
 from .io_utils import (
     bool_json,
     normalized_json_text,
@@ -29,6 +30,21 @@ from .model import (
     SHARED_TOKENS,
     SIDECAR_PROOF_FIELDS,
     JsonObject,
+)
+
+README_HARNESS_TOKENS = (
+    "OmO/Codex harness",
+    "main thread conducts",
+    "Workers do source-heavy dirty work",
+    "index first",
+    "source-pack first",
+)
+SKILL_HARNESS_TOKENS = (
+    "OmO/Codex harness",
+    "main thread conducts",
+    "Workers do source-heavy dirty work",
+    "index first and source-pack first",
+    "Source gap",
 )
 
 
@@ -96,6 +112,16 @@ def check_skill_routing(root: Path, issues: list[Issue]) -> None:
     relative_path = "skills/SKILL.md"
     text = read_text(root, relative_path, issues)
     require_tokens(text, relative_path, ("references/delegation.md", "source-heavy", "second user approval", "validates worker output", HOOK_AUTHORIZATION_SENTENCE, *OPT_OUT_TOKENS), issues)
+    require_tokens(text, relative_path, SKILL_HARNESS_TOKENS, issues)
+
+
+def check_harness_docs(root: Path, issues: list[Issue]) -> None:
+    readme_path = "README.md"
+    readme_text = read_text(root, readme_path, issues)
+    require_tokens(readme_text, readme_path, README_HARNESS_TOKENS, issues)
+    delegation_path = "skills/references/delegation.md"
+    delegation_text = read_text(root, delegation_path, issues)
+    check_harness_contract(delegation_text, delegation_path, issues)
 
 
 def check_command_refs(root: Path, issues: list[Issue]) -> None:
@@ -253,6 +279,7 @@ def check_toml_roles(root: Path, issues: list[Issue]) -> None:
 def validate(root: Path) -> tuple[Issue, ...]:
     issues: list[Issue] = []
     check_delegation(root, issues)
+    check_harness_docs(root, issues)
     check_skill_routing(root, issues)
     check_command_refs(root, issues)
     check_source_pack_orchestration(root, issues)

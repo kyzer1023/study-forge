@@ -36,7 +36,16 @@ def parent_claims_dirty_work(line: str) -> bool:
     parent_named = any(token in lowered for token in PARENT_THREAD_TOKENS)
     negated = any(negator in lowered for negator in PARENT_SOURCE_WORK_NEGATORS)
     source_work = any(claim in lowered for claim in PARENT_SOURCE_WORK_CLAIMS)
-    return parent_named and source_work and not negated
+    worker_owns_source_work = any(
+        phrase in lowered
+        for phrase in (
+            "workers do",
+            "workers own",
+            "workers must own",
+            "worker lanes do",
+        )
+    )
+    return parent_named and source_work and not negated and not worker_owns_source_work
 
 
 def check_harness_contract(text: str, relative_path: str, issues: list[Issue]) -> None:
