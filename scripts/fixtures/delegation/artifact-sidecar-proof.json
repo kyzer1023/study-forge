@@ -1,0 +1,23 @@
+{
+  "Source Basis": [
+    "Lecture slides",
+    "Past-year questions"
+  ],
+  "Scope Boundaries": [
+    "Covers revision topics selected from available sources"
+  ],
+  "Verification Notes": [
+    "Verifier checked rendered learner counts against proof records"
+  ],
+  "Manual QA status": "PASS",
+  "lane_evidence": [
+    {
+      "lane": "learner_surface",
+      "status": "PASS"
+    }
+  ],
+  "raw_report_references": [
+    "verifier-reports/learner-surface.json",
+    "qa-report.json"
+  ]
+}

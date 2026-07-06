@@ -13,11 +13,12 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+import json
 from pathlib import Path
 import sys
 import tempfile
 import tomllib
-from typing import Final
+from typing import Final, TypeAlias, assert_never
 
 
 REQUIRED_SECTIONS: Final = (
@@ -163,6 +164,26 @@ LOCAL_EXERCISE_COMMANDS: Final = (
     '$study-forge rescue "I have 2/3 hours"',
     '$study-forge trace "BFS/DFS difference"',
 )
+JsonValue: TypeAlias = str | int | float | bool | None | list["JsonValue"] | dict[str, "JsonValue"]
+JsonObject: TypeAlias = dict[str, JsonValue]
+INDEPENDENT_INVOCATION_MODES: Final = frozenset(("independent_subagent", "installed_toml_agent"))
+LEARNER_AUDIT_LABELS: Final = (
+    "Source Basis",
+    "Scope Boundaries",
+    "Verification Notes",
+    "Manual QA status",
+    "raw verifier",
+    "verifier lane status",
+    "raw worker-lane status",
+)
+SIDECAR_PROOF_FIELDS: Final = (
+    "Source Basis",
+    "Scope Boundaries",
+    "Verification Notes",
+    "Manual QA status",
+    "lane_evidence",
+    "raw_report_references",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -200,15 +221,14 @@ def parse_args(argv: Sequence[str]) -> CliArgs | Issue:
     repo_root: Path | None = None
     self_test = False
     for token in argv:
-        match token:
-            case "--self-test":
-                self_test = True
-            case value if value.startswith("--"):
-                return Issue(value, "unknown option")
-            case value if repo_root is None:
-                repo_root = Path(value)
-            case value:
-                return Issue(value, "unexpected positional argument")
+        if token == "--self-test":
+            self_test = True
+        elif token.startswith("--"):
+            return Issue(token, "unknown option")
+        elif repo_root is None:
+            repo_root = Path(token)
+        else:
+            return Issue(token, "unexpected positional argument")
     if not self_test and repo_root is None:
         return Issue("<repo-root>", "repo root is required")
     return CliArgs(repo_root=repo_root, self_test=self_test)
@@ -231,6 +251,122 @@ def require_tokens(text: str, relative_path: str, tokens: Sequence[str], issues:
             issues.append(Issue(relative_path, f"missing required token: {token}"))
 
 
+def lines_with_all(text: str, tokens: Sequence[str]) -> tuple[str, ...]:
+    return tuple(line for line in text.splitlines() if all(token in line for token in tokens))
+
+
+def first_position(text: str, token: str) -> int | None:
+    position = text.find(token)
+    if position == -1:
+        return None
+    return position
+
+
+def to_json_value(value: JsonValue) -> JsonValue:
+    match value:
+        case str() | int() | float() | bool() | None:
+            return value
+        case list():
+            return [to_json_value(item) for item in value]
+        case dict():
+            return {str(key): to_json_value(item) for key, item in value.items()}
+        case _ as unreachable:
+            assert_never(unreachable)
+
+
+def read_json_object(root: Path, relative_path: str, issues: list[Issue]) -> JsonObject | None:
+    path = root / relative_path
+    try:
+        loaded = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+    except UnicodeDecodeError as error:
+        issues.append(Issue(relative_path, f"cannot read UTF-8 JSON: {error}"))
+        return None
+    except json.JSONDecodeError as error:
+        issues.append(Issue(relative_path, f"cannot parse JSON: {error}"))
+        return None
+    data = to_json_value(loaded)
+    if isinstance(data, dict):
+        return data
+    issues.append(Issue(relative_path, "JSON root must be an object"))
+    return None
+
+
+def text_json(container: JsonObject, key: str) -> str | None:
+    value = container.get(key)
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    return None
+
+
+def bool_json(container: JsonObject, key: str) -> bool | None:
+    value = container.get(key)
+    if isinstance(value, bool):
+        return value
+    return None
+
+
+def object_json(container: JsonObject, key: str) -> JsonObject | None:
+    value = container.get(key)
+    if isinstance(value, dict):
+        return value
+    return None
+
+
+def object_list_json(container: JsonObject, key: str) -> tuple[JsonObject, ...]:
+    value = container.get(key)
+    if isinstance(value, list):
+        return tuple(item for item in value if isinstance(item, dict))
+    return ()
+
+
+def normalized_json_text(container: JsonObject, key: str) -> str:
+    value = text_json(container, key)
+    if value is None:
+        return ""
+    return "_".join(value.casefold().replace("-", " ").split())
+
+
+def lane_has_child_proof(lane: JsonObject) -> bool:
+    mode = normalized_json_text(lane, "invocation_mode")
+    if mode not in INDEPENDENT_INVOCATION_MODES:
+        return False
+    has_child_identity = text_json(lane, "child_agent_id") is not None or text_json(lane, "child_thread_id") is not None
+    return has_child_identity and text_json(lane, "raw_child_report_path") is not None and lane.get("parent_validated") is True
+
+
+def has_indexer_construction_lane(lanes: Sequence[JsonObject]) -> bool:
+    for lane in lanes:
+        role = normalized_json_text(lane, "role")
+        if role == "studyforge_indexer" and lane_has_child_proof(lane):
+            return True
+    return False
+
+
+def has_source_index_verifier_lane(lanes: Sequence[JsonObject]) -> bool:
+    for lane in lanes:
+        role = normalized_json_text(lane, "role")
+        lane_name = normalized_json_text(lane, "lane")
+        if role == "studyforge_verifier" and lane_name == "source_index" and lane_has_child_proof(lane):
+            return True
+    return False
+
+
+def artifact_boundary_issues(label: str, learner_html: str, sidecar_proof: JsonObject | None) -> tuple[Issue, ...]:
+    issues: list[Issue] = []
+    for audit_label in LEARNER_AUDIT_LABELS:
+        if audit_label in learner_html:
+            issues.append(Issue(label, f"audit scaffold in learner HTML: {audit_label}"))
+    if sidecar_proof is None:
+        issues.append(Issue(label, "sidecar proof missing"))
+        return tuple(issues)
+    for field in SIDECAR_PROOF_FIELDS:
+        if field not in sidecar_proof:
+            issues.append(Issue(label, f"sidecar proof missing field: {field}"))
+    return tuple(issues)
+
+
 def check_delegation(root: Path, issues: list[Issue]) -> None:
     relative_path = "skills/references/delegation.md"
     text = read_text(root, relative_path, issues)
@@ -238,6 +374,37 @@ def check_delegation(root: Path, issues: list[Issue]) -> None:
     require_tokens(text, relative_path, PROMPT_TOKENS, issues)
     require_tokens(text, relative_path, SHARED_TOKENS, issues)
     require_tokens(text, relative_path, (HOOK_AUTHORIZATION_SENTENCE, *OPT_OUT_TOKENS), issues)
+    index_rows = lines_with_all(text, ("index", "source-index"))
+    has_constructive_indexer = any(
+        "studyforge-indexer" in row and "studyforge-verifier" in row and "source_index" in row for row in index_rows
+    )
+    if not has_constructive_indexer:
+        issues.append(
+            Issue(
+                relative_path,
+                "missing-indexer-construction: index/source-index matrix must name studyforge-indexer construction separately from studyforge-verifier source_index",
+            )
+        )
+
+
+def check_index_reference(root: Path, issues: list[Issue]) -> None:
+    relative_path = "skills/references/index.md"
+    text = read_text(root, relative_path, issues)
+    indexer_at = first_position(text, "studyforge-indexer")
+    verifier_at = first_position(text, "studyforge-verifier")
+    source_index_at = first_position(text, "source_index")
+    if indexer_at is None or verifier_at is None or source_index_at is None or not (indexer_at < verifier_at and indexer_at < source_index_at):
+        issues.append(
+            Issue(
+                relative_path,
+                "verifier-before-indexer: index docs must run studyforge-indexer construction before studyforge-verifier source_index checks",
+            )
+        )
+    if "file, file bundle, or page range" not in text:
+        issues.append(Issue(relative_path, "missing sharding rule: indexer lanes must shard by file, file bundle, or page range"))
+    topic_rule_lines = lines_with_all(text.casefold(), ("topic", "not"))
+    if not topic_rule_lines:
+        issues.append(Issue(relative_path, "missing topic sharding rule: topics must be outputs after extraction, not primary sharding keys"))
 
 
 def check_skill_routing(root: Path, issues: list[Issue]) -> None:
@@ -262,6 +429,46 @@ def check_command_refs(root: Path, issues: list[Issue]) -> None:
     for relative_path, tokens in COMMAND_REQUIREMENTS.items():
         text = read_text(root, relative_path, issues)
         require_tokens(text, relative_path, tokens, issues)
+    check_index_reference(root, issues)
+
+
+def check_source_pack_orchestration(root: Path, issues: list[Issue]) -> None:
+    relative_path = ".study-forge/source-pack/pack-verification.json"
+    pack = read_json_object(root, relative_path, issues)
+    if pack is None:
+        return
+    preflight = object_json(pack, "tooling_preflight")
+    tooling_available = bool_json(preflight, "available") if preflight is not None else None
+    invocation_mode = normalized_json_text(pack, "invocation_mode")
+    readiness = normalized_json_text(pack, "readiness_state")
+    indexer_lanes = object_list_json(pack, "indexer_lanes")
+    verifier_lanes = object_list_json(pack, "verifier_lanes")
+    has_indexer = has_indexer_construction_lane(indexer_lanes)
+    has_verifier = has_source_index_verifier_lane(verifier_lanes)
+    if tooling_available is True and not has_indexer:
+        issues.append(Issue(relative_path, "missing indexer construction evidence: tooling was available but no studyforge-indexer child lane was recorded"))
+    if readiness == "independent_verified" and not (has_indexer and has_verifier):
+        issues.append(Issue(relative_path, "independent readiness requires studyforge-indexer construction and studyforge-verifier source_index child proof"))
+    if invocation_mode == "fallback_local" and tooling_available is True:
+        issues.append(Issue(relative_path, "fallback_local cannot be conductor-complete while tooling_preflight.available is true"))
+
+
+def check_artifact_boundary(root: Path, issues: list[Issue]) -> None:
+    relative_path = "skills/references/artifact.md"
+    text = read_text(root, relative_path, issues)
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        lowered = line.casefold()
+        has_audit_label = any(label.casefold() in lowered for label in LEARNER_AUDIT_LABELS)
+        main_surface_claim = any(token in lowered for token in ("visible", "near the top", "final html", "html render", "learner html", "main study surface"))
+        sidecar_claim = any(token in lowered for token in ("sidecar", "proof file", "proof plane", "qa-report", "verifier-reports", "answer-ledger"))
+        if has_audit_label and main_surface_claim and not sidecar_claim:
+            issues.append(Issue(f"{relative_path}:{line_number}", "audit scaffold must not be required in learner HTML by default"))
+    learner_path = "scripts/fixtures/delegation/audit-free-learner.html"
+    proof_path = "scripts/fixtures/delegation/artifact-sidecar-proof.json"
+    learner = read_text(root, learner_path, issues)
+    proof = read_json_object(root, proof_path, issues)
+    if learner or proof is not None:
+        issues.extend(artifact_boundary_issues("audit-free-learner", learner, proof))
 
 
 def line_requires_user_approval(line: str) -> bool:
@@ -311,6 +518,8 @@ def validate(root: Path) -> tuple[Issue, ...]:
     check_delegation(root, issues)
     check_skill_routing(root, issues)
     check_command_refs(root, issues)
+    check_source_pack_orchestration(root, issues)
+    check_artifact_boundary(root, issues)
     check_truthfulness(root, issues)
     check_toml_roles(root, issues)
     return tuple(issues)
@@ -353,11 +562,85 @@ def write_valid_fixture(root: Path) -> None:
         f"{HOOK_AUTHORIZATION_SENTENCE} If the user says local only, no subagents, no delegation, "
         "or otherwise restricts tool use, record fallback_local instead."
     )
-    delegation = "\n".join((*REQUIRED_SECTIONS, *PROMPT_TOKENS, *SHARED_TOKENS, "second user approval", hook_line))
+    delegation = "\n".join(
+        (
+            *REQUIRED_SECTIONS,
+            *PROMPT_TOKENS,
+            *SHARED_TOKENS,
+            "second user approval",
+            hook_line,
+            "| `index` or `source-index` over a PDF-heavy or multi-source folder | Run `studyforge-indexer` construction by file, file bundle, or page range first, then run `studyforge-verifier` with lane `source_index`. | `studyforge-indexer`, `source_index`, `studyforge-verifier`, `qa_executor`, `final_reviewer` |",
+        )
+    )
     write_file(root, "skills/references/delegation.md", delegation)
     write_file(root, "skills/SKILL.md", f"references/delegation.md source-heavy second user approval validates worker output {hook_line}")
     for relative_path, tokens in COMMAND_REQUIREMENTS.items():
-        write_file(root, relative_path, " ".join(tokens))
+        if relative_path == "skills/references/index.md":
+            write_file(
+                root,
+                relative_path,
+                "Run studyforge-indexer construction by file, file bundle, or page range first. "
+                "Topics are outputs after extraction, not primary sharding keys. "
+                "Then run studyforge-verifier with lane source_index. "
+                + " ".join(tokens)
+                + "\n",
+            )
+        elif relative_path == "skills/references/artifact.md":
+            write_file(
+                root,
+                relative_path,
+                " ".join(tokens)
+                + "\nLearner HTML is self-contained and audit-free by default. "
+                "Source Basis, Scope Boundaries, Verification Notes, Manual QA status, raw verifier lane status, lane_evidence, and raw_report references stay in sidecar proof files, qa-report.json, verifier-reports, and answer-ledger.json.\n",
+            )
+        else:
+            write_file(root, relative_path, " ".join(tokens))
+    write_file(
+        root,
+        ".study-forge/source-pack/pack-verification.json",
+        "{\n"
+        '  "invocation_mode": "independent_subagent",\n'
+        '  "tooling_preflight": {"available": true},\n'
+        '  "readiness_state": "independent_verified",\n'
+        '  "indexer_lanes": [\n'
+        "    {\n"
+        '      "role": "studyforge-indexer",\n'
+        '      "lane": "source_index",\n'
+        '      "invocation_mode": "independent_subagent",\n'
+        '      "child_agent_id": "indexer-child",\n'
+        '      "raw_child_report_path": "indexer-reports/indexer-child.json",\n'
+        '      "parent_validated": true\n'
+        "    }\n"
+        "  ],\n"
+        '  "verifier_lanes": [\n'
+        "    {\n"
+        '      "role": "studyforge-verifier",\n'
+        '      "lane": "source_index",\n'
+        '      "invocation_mode": "independent_subagent",\n'
+        '      "child_agent_id": "verifier-child",\n'
+        '      "raw_child_report_path": "verifier-reports/source-index.json",\n'
+        '      "parent_validated": true\n'
+        "    }\n"
+        "  ]\n"
+        "}\n",
+    )
+    write_file(
+        root,
+        "scripts/fixtures/delegation/audit-free-learner.html",
+        "<!doctype html><html><body><main><h1>Revision Atlas</h1><p>Source gap: unreadable annotation.</p></main></body></html>",
+    )
+    write_file(
+        root,
+        "scripts/fixtures/delegation/artifact-sidecar-proof.json",
+        "{\n"
+        '  "Source Basis": ["lecture slides"],\n'
+        '  "Scope Boundaries": ["revision topics"],\n'
+        '  "Verification Notes": ["learner surface checked"],\n'
+        '  "Manual QA status": "PASS",\n'
+        '  "lane_evidence": [{"lane": "learner_surface", "status": "PASS"}],\n'
+        '  "raw_report_references": ["qa-report.json"]\n'
+        "}\n",
+    )
     safe_line = "fallback_local is not independent verification; do not wait for a second user approval."
     for relative_path in READINESS_FILES:
         if relative_path.startswith("agents/"):
@@ -398,6 +681,65 @@ def remove_opt_out(root: Path) -> None:
     write_file(root, "skills/SKILL.md", f"references/delegation.md source-heavy second user approval validates worker output {HOOK_AUTHORIZATION_SENTENCE}")
 
 
+def write_missing_indexer_construction(root: Path) -> None:
+    hook_line = (
+        f"{HOOK_AUTHORIZATION_SENTENCE} If the user says local only, no subagents, no delegation, "
+        "or otherwise restricts tool use, record fallback_local instead."
+    )
+    delegation = "\n".join(
+        (
+            *REQUIRED_SECTIONS,
+            *PROMPT_TOKENS,
+            *SHARED_TOKENS,
+            hook_line,
+            "fallback_local is not independent verification; do not wait for a second user approval.",
+            "| `index` or `source-index` over a PDF-heavy or multi-source folder | Delegate source-pack construction by file, file bundle, or page range; then run a separate source-pack challenge before readiness. | `source_index`, `qa_executor`, `final_reviewer` |",
+        )
+    )
+    write_file(root, "skills/references/delegation.md", delegation)
+
+
+def write_verifier_before_indexer(root: Path) -> None:
+    text = (
+        "source_index indexer verifier qa_executor final_reviewer fallback_local\n"
+        "Run an independent studyforge-verifier invocation with lane source_index before construction.\n"
+        "Then run studyforge-indexer lanes by file, file bundle, or page range.\n"
+        "Topics are outputs after extraction, not primary sharding keys.\n"
+    )
+    write_file(root, "skills/references/index.md", text)
+
+
+def write_fallback_local_pack_without_indexer(root: Path) -> None:
+    write_file(
+        root,
+        ".study-forge/source-pack/pack-verification.json",
+        "{\n"
+        '  "invocation_mode": "fallback_local",\n'
+        '  "tooling_preflight": {"available": true},\n'
+        '  "readiness_state": "independent_verified",\n'
+        '  "verifier_lanes": [\n'
+        "    {\n"
+        '      "role": "studyforge-verifier",\n'
+        '      "lane": "source_index",\n'
+        '      "invocation_mode": "independent_subagent",\n'
+        '      "child_agent_id": "019f33ca-a9d2-7600-9c5f-95cf40fd9a77",\n'
+        '      "raw_child_report_path": "verifier-reports/source-index.json",\n'
+        '      "parent_validated": true\n'
+        "    }\n"
+        "  ],\n"
+        '  "indexer_lanes": []\n'
+        "}\n",
+    )
+
+
+def require_audit_heavy_learner_html(root: Path) -> None:
+    write_file(
+        root,
+        "skills/references/artifact.md",
+        "source_research verifier qa_executor final_reviewer fallback_local Source Basis visible Scope Boundaries visible Verification Notes section Manual QA status",
+    )
+
+
 def expect_issue(case: FixtureCase) -> bool:
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)
@@ -412,6 +754,26 @@ def expect_issue(case: FixtureCase) -> bool:
     return False
 
 
+def expect_artifact_boundary_issue(label: str, learner_html: str, sidecar_proof: JsonObject | None, expected: str) -> bool:
+    issues = artifact_boundary_issues(label, learner_html, sidecar_proof)
+    if any(expected in issue.detail for issue in issues):
+        print(f"SELF-TEST RED {label}: PASS expected {expected}")
+        return True
+    print(f"FAIL self-test {label}: expected {expected}")
+    print_result(issues)
+    return False
+
+
+def expect_artifact_boundary_clean(label: str, learner_html: str, sidecar_proof: JsonObject) -> bool:
+    issues = artifact_boundary_issues(label, learner_html, sidecar_proof)
+    if not issues:
+        print(f"SELF-TEST GREEN {label}: PASS")
+        return True
+    print(f"FAIL self-test {label}: expected artifact boundary pass")
+    print_result(issues)
+    return False
+
+
 def run_self_test() -> int:
     cases = (
         FixtureCase("missing-delegation", remove_delegation, "missing required file"),
@@ -420,8 +782,29 @@ def run_self_test() -> int:
         FixtureCase("approval-before-spawn", require_approval, "requires second user approval"),
         FixtureCase("missing-hook-authorization", remove_hook_authorization, f"missing required token: {HOOK_AUTHORIZATION_SENTENCE}"),
         FixtureCase("missing-opt-out-coverage", remove_opt_out, "missing required token: local only"),
+        FixtureCase("missing-indexer-construction", write_missing_indexer_construction, "missing-indexer-construction"),
+        FixtureCase("verifier-before-indexer", write_verifier_before_indexer, "verifier-before-indexer"),
+        FixtureCase("cpt212-fallback-local-pack", write_fallback_local_pack_without_indexer, "missing indexer construction evidence"),
+        FixtureCase("artifact-audit-heavy-contract", require_audit_heavy_learner_html, "audit scaffold"),
     )
     if not all(expect_issue(case) for case in cases):
+        return 1
+    audit_free_html = "<main><h1>Revision Atlas</h1><p>Source gap: unreadable note.</p></main>"
+    audit_heavy_html = "<main><h2>Source Basis</h2><p>Manual QA status and raw verifier lane status.</p></main>"
+    sidecar_proof: JsonObject = {
+        "Source Basis": ["lecture slides"],
+        "Scope Boundaries": ["revision topics"],
+        "Verification Notes": ["checked against ledger"],
+        "Manual QA status": "PASS",
+        "lane_evidence": [{"lane": "learner_surface", "status": "PASS"}],
+        "raw_report_references": ["qa-report.json"],
+    }
+    missing_sidecar: JsonObject = {"Source Basis": ["lecture slides"], "lane_evidence": []}
+    if not expect_artifact_boundary_issue("audit-heavy-learner", audit_heavy_html, sidecar_proof, "audit scaffold"):
+        return 1
+    if not expect_artifact_boundary_issue("artifact-sidecar-missing-proof", audit_free_html, missing_sidecar, "sidecar proof missing field"):
+        return 1
+    if not expect_artifact_boundary_clean("audit-free-learner", audit_free_html, sidecar_proof):
         return 1
     hook_ok = True
     for command in DELEGATED_EXERCISE_COMMANDS:
