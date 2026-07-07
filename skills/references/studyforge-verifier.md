@@ -43,6 +43,8 @@ Do not create separate verifier TOMLs per lane. The source-controlled TOML is a 
 - Confirm every in-scope paper is represented in `source-inventory.json` and `question-inventory.json`.
 - Confirm every question, subpart, instruction, mark value, table, diagram, formula, code block, image-only prompt, and special answer constraint is captured or explicitly marked `Unreadable`, `Duplicate`, or `Out of scope`.
 - Reject collapsed mark-bearing subparts: a parent question may carry shared context, tables, or figures, but each answerable subpart with marks needs its own extracted proof record or an explicit non-answerable/gap status. Treat atomic mark-bearing subpart extraction as a blocking coverage prerequisite.
+- Reject duplicate `question_id` values in `question-inventory.json`. If two source items have the same printed number, require distinct canonical IDs that include the paper/section/subpart distinction.
+- Reject compacted placeholder stems such as "Question text was compacted..." in the inventory, answer ledger, or learner HTML. A verifier must inspect the actual paper text, not trust a pointer to temporary extraction notes as the learner-facing stem.
 - Flag unreadable OCR, cropped pages, missing diagrams, broken tables, numbering drift, page-order drift, missing marks, and source pages that were never inspected.
 - For scanned or image-heavy papers, require extraction evidence before answers are trusted. If a diagram/table cannot be read, require `Unreadable` rather than an invented reconstruction.
 - If a rendered page image or visual payload exists, do not accept `Unreadable` based only on OCR or `pdftotext` failure. Require a visual locator, rendered image path, visual inspection result, or visual worker report proving the visible payload was inspected and was still unusable.
@@ -51,6 +53,9 @@ Do not create separate verifier TOMLs per lane. The source-controlled TOML is a 
 
 - Compare `question-inventory.json` against `answer-ledger.json` and the rendered artifact.
 - Confirm every in-scope question/subpart has one ledger record with `question_id`, `status`, `marks`, `rendered_anchor`, and a learner-visible representation or an explicit non-render reason.
+- Reject duplicate `question_id` values in `answer-ledger.json`; unique `rendered_anchor` values do not make duplicate ledger IDs safe.
+- Compare ledger `question_text` against the matching inventory stem when both are available; a ledger answer attached to a different stem is a blocking coverage defect.
+- Accept top-level answer rows or `paper_reports[*].entries` as storage layouts, but evaluate duplicate IDs, visual evidence, source gaps, and learner rendering against the flattened answer rows.
 - Reject collapsed mark-bearing subparts in the ledger or rendered artifact; parent-level summaries do not satisfy coverage for answerable child subparts.
 - Require worker coverage metadata that reconciles rendered coverage: each rendered answer needs a non-empty `rendered_anchor`, learner-facing nav label, and count evidence that matches question inventory, answer ledger, sidecar worker reports, and artifact navigation.
 - Flag skipped questions, unexplained duplicates, missing out-of-scope reasons, paper/question count drift, missing rendered anchors, and stale ledger/artifact mismatches from cached or regenerated files.

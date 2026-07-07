@@ -3,9 +3,9 @@ from __future__ import annotations
 from html.parser import HTMLParser
 from pathlib import Path
 import re
-from typing import Final, cast, override
+from typing import Final, override
 
-from scripts.pastyear_proof_common import ANSWERED_STATUSES, normalized, text_field
+from scripts.pastyear_proof_common import ANSWERED_STATUSES, normalized, question_text_is_placeholder, text_field
 from scripts.pastyear_proof_inventory import inventory_subparts, ledger_entries
 from scripts.pastyear_proof_model import Issue, IssueCode, JsonObject, JsonValue, ProofData
 
@@ -62,7 +62,7 @@ class LearnerTextParser(HTMLParser):
 
 
 def normalized_tokens(text: str) -> tuple[str, ...]:
-    matches = cast(list[str], TOKEN_RE.findall(text.casefold()))
+    matches: list[str] = TOKEN_RE.findall(text.casefold())
     return tuple(token for token in matches if token not in COMMON_ANSWER_TOKENS)
 
 
@@ -135,6 +135,14 @@ def add_learner_answer_issues(data: ProofData, issues: list[Issue]) -> None:
     html_path = learner_html_path(data)
     html_label = str(html_path.relative_to(data.proof_dir)) if html_path is not None else ""
     rendered_text = learner_text(html_path) if html_path is not None else None
+    if rendered_text is not None and question_text_is_placeholder(rendered_text):
+        issues.append(
+            Issue(
+                IssueCode.PLACEHOLDER_QUESTION_TEXT,
+                html_label,
+                "learner HTML renders a compacted worker-report placeholder instead of source question text",
+            )
+        )
     marks_by_id = marks_by_question_id(data.question_inventory)
     for entry in ledger_entries(data.answer_ledger):
         status = normalized(text_field(entry, "status"))

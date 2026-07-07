@@ -20,6 +20,11 @@ OBJECTIVE_QUESTION_TYPES: Final = frozenset({"objective", "mcq", "multiple_choic
 JUSTIFIED_DUPLICATE_STATUSES: Final = frozenset({"accepted", "acceptable", "justified", "pass"})
 CHILD_PROOF_FIELDS: Final = ("child_agent_id", "child_thread_id", "raw_child_report_path")
 DEGRADED_GRANULARITY_STATUSES: Final = frozenset({"collapsed", "degraded_parent_shell"})
+PLACEHOLDER_QUESTION_TEXT_MARKERS: Final = (
+    "question text was compacted",
+    "compacted in the worker report",
+    "see study forge tmp extract",
+)
 SUBPART_EXPECTING_GRANULARITY_STATUSES: Final = frozenset(
     {"atomic_subparts", "complete_child_subparts", "collapsed", "degraded_parent_shell"}
 )
@@ -66,6 +71,20 @@ def normalized(value: str | None) -> str:
     if value is None:
         return ""
     return "_".join(value.strip().lower().replace("-", " ").replace("_", " ").split())
+
+
+def normalized_prose(value: str) -> str:
+    normalized_value = value.casefold()
+    for char in ("-", "_", ".", "\\", "/", ":"):
+        normalized_value = normalized_value.replace(char, " ")
+    return " ".join(normalized_value.split())
+
+
+def question_text_is_placeholder(value: str | None) -> bool:
+    if value is None:
+        return False
+    normalized_value = normalized_prose(value)
+    return any(marker in normalized_value for marker in PLACEHOLDER_QUESTION_TEXT_MARKERS)
 
 
 def evidence_text(value: JsonValue | None) -> str:

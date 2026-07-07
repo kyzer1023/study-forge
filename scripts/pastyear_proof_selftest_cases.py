@@ -4,9 +4,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import json
 from pathlib import Path
-from typing import TypeAlias, cast
+from typing import TypeAlias
 
-from scripts.pastyear_proof_model import IssueCode, JsonValue
+from scripts.pastyear_proof_model import Issue, IssueCode, JsonValue
+from scripts.pastyear_proof_validator import load_json
 
 JsonMutator: TypeAlias = Callable[[JsonValue], None]
 ProofMutator: TypeAlias = Callable[[Path], None]
@@ -45,8 +46,16 @@ class SuppressedSubpartCase:
     remaining_question_ids: tuple[str, ...]
 
 
+class SelfTestFixtureJsonError(RuntimeError):
+    pass
+
+
 def rewrite_json(path: Path, mutator: JsonMutator) -> None:
-    data = cast(JsonValue, json.loads(path.read_text(encoding="utf-8")))
+    issues: list[Issue] = []
+    data = load_json(path, issues)
+    if issues:
+        details = "; ".join(issue.detail for issue in issues)
+        raise SelfTestFixtureJsonError(details)
     mutator(data)
     _ = path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 

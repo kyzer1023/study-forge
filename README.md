@@ -67,6 +67,10 @@ Learner HTML for `atlas` and `past-year` is study-first by default. Full Source 
 
 For `artifact past-year`, use a proof-plane split: `answer-ledger.json` is canonical for answer records and HTML rendering, while worker coverage metadata, verifier reports, readiness state, raw worker-report paths, lane evidence, and manual QA stay in sidecars such as `qa-report.json`, `verifier-reports/`, and worker coverage reports. The learner HTML must render from the ledger, not from ad hoc HTML edits or worker reports.
 
+Every answerable item needs one unique `question_id` in `question-inventory.json` and one matching unique row in `answer-ledger.json`; unique rendered anchors are not a substitute for unique proof identities. Before rendering, reconcile ledger stems with inventory stems so section/numbering drift is fixed in the proof plane rather than hidden in HTML.
+
+The answer ledger may be a simple answer list or grouped by paper reports, but the flattened rows are the contract. Do not render or ship compacted worker placeholders such as "Question text was compacted..." as question stems; recover the real paper text or mark the source item honestly.
+
 Exam-worthy past-year output means the learner page shows mark-bearing model answers from `answer-ledger.answer`, not short hints. Worked steps, code/pseudocode, traces, tables, trees, diagrams, formulas, and objective-answer reasoning must be present when marks require them. `student_explanation` is supporting why-it-is-right prose, not a replacement model answer.
 
 Do not call a short hint a model answer. Do not mark a visual question `Unreadable` only because text extraction failed when a rendered page image exists; inspect the visual payload or record why it is unusable. Do not call `fallback_local`, `fallback_local_reviewed`, stale verifier output, or unresolved major findings exam-ready or independently verified.

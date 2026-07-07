@@ -9,6 +9,13 @@ from scripts.pastyear_proof_cli import print_result
 from scripts.pastyear_proof_model import IssueCode
 from scripts.pastyear_proof_examworthy_selftest_cases import (
     make_coding_answer_hint_only,
+    make_duplicate_inventory_question_id,
+    make_duplicate_ledger_question_id,
+    make_ledger_question_text_drift,
+    make_nested_duplicate_ledger_question_id,
+    make_nested_paper_reports_ledger,
+    make_placeholder_learner_html,
+    make_placeholder_question_text,
     make_stale_verifier_report,
     make_unresolved_major_report,
     make_visual_inspected_answer,
@@ -158,6 +165,13 @@ def run_self_test() -> int:
                 ("B2(a)(ii)", "B2(a)(iii)"),
             )
         ),
+        expect_mutated_issue(MutatedCase("duplicate-ledger-question-id", green, make_duplicate_ledger_question_id, IssueCode.DUPLICATE_LEDGER_QUESTION_ID)),
+        expect_mutated_green(MutatedCase("nested-paper-reports-ledger", green, make_nested_paper_reports_ledger, IssueCode.DUPLICATE_LEDGER_QUESTION_ID)),
+        expect_mutated_issue(MutatedCase("nested-duplicate-ledger-question-id", green, make_nested_duplicate_ledger_question_id, IssueCode.DUPLICATE_LEDGER_QUESTION_ID)),
+        expect_mutated_issue(MutatedCase("duplicate-inventory-question-id", green, make_duplicate_inventory_question_id, IssueCode.DUPLICATE_QUESTION_INVENTORY_ID)),
+        expect_mutated_issue(MutatedCase("ledger-question-text-drift", green, make_ledger_question_text_drift, IssueCode.LEDGER_QUESTION_TEXT_DRIFT)),
+        expect_mutated_issue(MutatedCase("placeholder-question-text", green, make_placeholder_question_text, IssueCode.PLACEHOLDER_QUESTION_TEXT)),
+        expect_mutated_issue(MutatedCase("placeholder-learner-html", green, make_placeholder_learner_html, IssueCode.PLACEHOLDER_QUESTION_TEXT)),
         expect_mutated_issue(MutatedCase("generic-objective-explanations", green, make_generic_objective_explanations, IssueCode.GENERIC_OBJECTIVE_EXPLANATION)),
         expect_mutated_issue(MutatedCase("generic-source-gap-reason", green, make_generic_source_gap_reason, IssueCode.SOURCE_GAP_MISSING_EVIDENCE)),
         expect_issue(Case("html-drops-model-answer", html_drops_model_answer, html_drops_model_answer / "session-summary.json", IssueCode.HTML_DROPS_MODEL_ANSWER)),

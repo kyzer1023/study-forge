@@ -7,16 +7,21 @@ from scripts.pastyear_proof_common import (
     OBJECTIVE_QUESTION_TYPES,
     explanation_fingerprint,
     normalized,
+    question_text_is_placeholder,
     text_field,
 )
 from scripts.pastyear_proof_inventory import (
     answerable_subpart_ids,
     expected_subpart_is_exempt,
     expected_subparts,
+    inventory_questions,
+    inventory_questions_by_question_id,
     inventory_subparts,
     ledger_entries,
+    ledger_entries_by_question_id,
     ledger_question_ids,
     ledger_statuses_by_question_id,
+    question_text,
 )
 from scripts.pastyear_proof_model import Issue, IssueCode, JsonObject, JsonValue, ObjectiveExplanation, ProofData
 
@@ -104,7 +109,116 @@ def add_expected_subpart_inventory_issues(data: ProofData, issues: list[Issue]) 
         )
 
 
+def normalized_question_text(value: str) -> str:
+    return " ".join(value.casefold().replace("-", " ").split())
+
+
+def question_text_tokens(value: str) -> set[str]:
+    tokens: set[str] = set()
+    token_chars: list[str] = []
+    for char in normalized_question_text(value):
+        if char.isalnum():
+            token_chars.append(char)
+            continue
+        if token_chars:
+            token = "".join(token_chars)
+            if len(token) > 2:
+                tokens.add(token)
+            token_chars = []
+    if token_chars:
+        token = "".join(token_chars)
+        if len(token) > 2:
+            tokens.add(token)
+    return tokens
+
+
+def question_texts_conflict(ledger_text: str, inventory_text: str) -> bool:
+    ledger_normalized = normalized_question_text(ledger_text)
+    inventory_normalized = normalized_question_text(inventory_text)
+    if ledger_normalized == inventory_normalized:
+        return False
+    if ledger_normalized in inventory_normalized or inventory_normalized in ledger_normalized:
+        return False
+    ledger_tokens = question_text_tokens(ledger_normalized)
+    inventory_tokens = question_text_tokens(inventory_normalized)
+    smaller_count = min(len(ledger_tokens), len(inventory_tokens))
+    if smaller_count < 4:
+        return False
+    shared_count = len(ledger_tokens & inventory_tokens)
+    return shared_count / smaller_count < 0.5
+
+
+def add_duplicate_question_id_issues(data: ProofData, issues: list[Issue]) -> None:
+    for question_id, entries in sorted(ledger_entries_by_question_id(data.answer_ledger).items()):
+        if len(entries) > 1:
+            issues.append(
+                Issue(
+                    IssueCode.DUPLICATE_LEDGER_QUESTION_ID,
+                    "answer-ledger.json",
+                    f"{question_id} appears {len(entries)} times in the answer ledger",
+                )
+            )
+    for question_id, questions in sorted(inventory_questions_by_question_id(data.question_inventory).items()):
+        if len(questions) > 1:
+            paper_ids = ", ".join(sorted({question.paper_id for question in questions}))
+            issues.append(
+                Issue(
+                    IssueCode.DUPLICATE_QUESTION_INVENTORY_ID,
+                    "question-inventory.json",
+                    f"{question_id} appears {len(questions)} times in the question inventory under {paper_ids}",
+                )
+            )
+
+
+def add_ledger_inventory_text_drift_issues(data: ProofData, issues: list[Issue]) -> None:
+    inventory_by_id = inventory_questions_by_question_id(data.question_inventory)
+    for question_id, entries in sorted(ledger_entries_by_question_id(data.answer_ledger).items()):
+        inventory_entries = inventory_by_id.get(question_id)
+        if len(entries) != 1 or inventory_entries is None or len(inventory_entries) != 1:
+            continue
+        ledger_text = question_text(entries[0])
+        inventory_text = inventory_entries[0].question_text
+        if ledger_text is None or inventory_text is None:
+            continue
+        if question_texts_conflict(ledger_text, inventory_text):
+            issues.append(
+                Issue(
+                    IssueCode.LEDGER_QUESTION_TEXT_DRIFT,
+                    "answer-ledger.json",
+                    f"{question_id} ledger question_text does not match question-inventory.json",
+                )
+            )
+
+
+def add_placeholder_question_text_issues(data: ProofData, issues: list[Issue]) -> None:
+    for entry in ledger_entries(data.answer_ledger):
+        placeholder_text = question_text(entry)
+        if not question_text_is_placeholder(placeholder_text):
+            continue
+        question_id = text_field(entry, "question_id") or "<unknown question>"
+        issues.append(
+            Issue(
+                IssueCode.PLACEHOLDER_QUESTION_TEXT,
+                "answer-ledger.json",
+                f"{question_id} keeps a compacted worker-report placeholder instead of the source question text",
+            )
+        )
+    for question in inventory_questions(data.question_inventory):
+        if not question_text_is_placeholder(question.question_text):
+            continue
+        issues.append(
+            Issue(
+                IssueCode.PLACEHOLDER_QUESTION_TEXT,
+                "question-inventory.json",
+                f"{question.question_id} keeps a compacted worker-report placeholder instead of the source question text",
+            )
+        )
+
+
 def add_answer_issues(data: ProofData, issues: list[Issue]) -> None:
+    add_duplicate_question_id_issues(data, issues)
+    add_placeholder_question_text_issues(data, issues)
+    add_ledger_inventory_text_drift_issues(data, issues)
     add_expected_subpart_inventory_issues(data, issues)
     ledger_ids = ledger_question_ids(data.answer_ledger)
     for question_id in answerable_subpart_ids(data.question_inventory, data.answer_ledger):
