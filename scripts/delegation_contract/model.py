@@ -33,6 +33,23 @@ SHARED_TOKENS: Final = (
     "parent_validated",
     "tooling_preflight",
 )
+ARTIFACT_ANSWER_PRODUCTION_TOKENS: Final = (
+    "answer-production gate",
+    "Source gap is a last-resort status",
+    "source-pack lookup",
+    "original-source inspection",
+    "answer synthesis",
+    "explicit degraded acceptance",
+    "over-gapped fallback",
+)
+ARTIFACT_PAST_YEAR_ROUTING_TOKENS: Final = (
+    "references/past-year-design.md",
+    "past-year-script",
+    "design_system_id",
+    "answer-production gate",
+    "Source gap is a last-resort status",
+    "over-gapped fallback",
+)
 HARNESS_LAYER_TOKENS: Final = ("OmO/Codex harness", "OmO harness", "Codex harness")
 RUNTIME_NEGATORS: Final = (
     "does not implement",
@@ -61,7 +78,21 @@ WORKER_SOURCE_WORK_TOKENS: Final = ("extract", "index", "source-pack", "verifica
 WORKER_PROMPT_ASSIGNMENT_TOKENS: Final = ("self-contained", "assignment")
 FALLBACK_REVIEWED_DEGRADED_TOKENS: Final = ("degraded", "not independent", "not independently", "not verified")
 COMMAND_REQUIREMENTS: Final = {
-    "skills/references/artifact.md": ("source_research", "verifier", "qa_executor", "final_reviewer", "fallback_local"),
+    "skills/references/artifact.md": (
+        "source_research",
+        "verifier",
+        "qa_executor",
+        "final_reviewer",
+        "fallback_local",
+        "references/past-year-design.md",
+        "design-systems/past-year-script/README.md",
+        "PRODUCT.md",
+        "DESIGN.md",
+        "reference-mock.html",
+        "design_system_id",
+        "past-year-script",
+        *ARTIFACT_ANSWER_PRODUCTION_TOKENS,
+    ),
     "skills/references/distill.md": ("source_research", "verifier", "qa_executor", "fallback_local"),
     "skills/references/map.md": ("source_research", "verifier", "qa_executor", "fallback_local"),
     "skills/references/deconstruct.md": ("source_research", "verifier", "qa_executor", "fallback_local"),

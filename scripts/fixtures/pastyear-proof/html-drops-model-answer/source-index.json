@@ -1,0 +1,19 @@
+{
+  "sources": [
+    {
+      "source_id": "past-year-html",
+      "title": "Past Year HTML Regression",
+      "path": "fixtures/past-year-html.pdf"
+    },
+    {
+      "source_id": "lecture-search",
+      "title": "Search Algorithms Lecture",
+      "path": "fixtures/lecture-search.pdf"
+    },
+    {
+      "source_id": "syllabus-2026",
+      "title": "Current syllabus authority",
+      "path": "fixtures/syllabus-2026.pdf"
+    }
+  ]
+}

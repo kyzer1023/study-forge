@@ -1,0 +1,40 @@
+{
+  "papers": [
+    {
+      "paper_id": "PY-HTML",
+      "title": "Past Year HTML Regression",
+      "extraction_granularity": {
+        "status": "complete_child_subparts",
+        "source_structure_evidence": [
+          {
+            "source_ref": "past-year-html:p2",
+            "observation": "H1(a)(i) is a separate mark-bearing coding subpart."
+          }
+        ],
+        "expected_answerable_subparts": [
+          {
+            "question_id": "H1(a)(i)",
+            "parent_question_id": "H1(a)",
+            "marks": 4,
+            "status": "Answerable"
+          }
+        ]
+      },
+      "questions": [
+        {
+          "question_id": "H1(a)",
+          "question_type": "coding",
+          "subparts": [
+            {
+              "question_id": "H1(a)(i)",
+              "parent_question_id": "H1(a)",
+              "question_type": "coding",
+              "marks": 4,
+              "status": "Answerable"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,19 +1,29 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 import json
 from pathlib import Path
-from typing import Final
+import sys
+from typing import Final, cast
 
-from pastyear_proof_model import (
+REPO_ROOT: Final = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from scripts.pastyear_proof_cli import CliRuntime, CliSpec, run_validation_cli
+from scripts.pastyear_proof_model import (
     Issue,
     IssueCode,
     JsonObject,
     JsonValue,
     ProofData,
 )
-from pastyear_proof_rules import (
+from scripts.pastyear_proof_rules import (
     add_answer_issues,
+    add_learner_answer_issues,
+    add_readiness_contract_issues,
     add_readiness_issues,
+    add_visual_issues,
     readiness_state,
 )
 
@@ -22,7 +32,7 @@ REQUIRED_FILES: Final = ("source-inventory.json", "question-inventory.json", "so
 
 def load_json(path: Path, issues: list[Issue]) -> JsonValue:
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return cast(JsonValue, json.loads(path.read_text(encoding="utf-8")))
     except FileNotFoundError:
         issues.append(Issue(IssueCode.MISSING_REQUIRED_DOC, str(path), "file is required"))
     except json.JSONDecodeError as exc:
@@ -57,6 +67,7 @@ def load_proof(proof_dir: Path, session_summary: Path | None, issues: list[Issue
         summary = as_object(load_json(session_summary, issues), session_summary, issues)
     return ProofData(
         proof_dir=proof_dir,
+        source_inventory=load_json(proof_dir / "source-inventory.json", issues),
         question_inventory=load_json(proof_dir / "question-inventory.json", issues),
         qa_report=as_object(load_json(proof_dir / "qa-report.json", issues), proof_dir / "qa-report.json", issues),
         answer_ledger=load_json(proof_dir / "answer-ledger.json", issues),
@@ -69,5 +80,23 @@ def validate(proof_dir: Path, session_summary: Path | None) -> tuple[str, tuple[
     issues: list[Issue] = []
     data = load_proof(proof_dir, session_summary, issues)
     add_readiness_issues(data, issues)
+    add_readiness_contract_issues(data, issues)
     add_answer_issues(data, issues)
+    add_learner_answer_issues(data, issues)
+    add_visual_issues(data, issues)
     return readiness_state(data.qa_report), tuple(issues)
+
+
+def main(argv: Sequence[str]) -> int:
+    return run_validation_cli(
+        argv,
+        CliRuntime(
+            spec=CliSpec("scripts/pastyear_proof_validator.py", allow_self_test=False),
+            validator=validate,
+            self_test_runner=None,
+        ),
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

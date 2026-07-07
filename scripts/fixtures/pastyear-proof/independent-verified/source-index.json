@@ -1,0 +1,19 @@
+{
+  "sources": [
+    {
+      "source_id": "past-year-2025",
+      "title": "Past Year 2025",
+      "path": "fixtures/past-year-2025.pdf"
+    },
+    {
+      "source_id": "lecture-ch2",
+      "title": "Lecture Chapter 2",
+      "path": "fixtures/lecture-ch2.pdf"
+    },
+    {
+      "source_id": "syllabus-2026",
+      "title": "Current CPT212 syllabus authority",
+      "path": "fixtures/syllabus-2026.pdf"
+    }
+  ]
+}

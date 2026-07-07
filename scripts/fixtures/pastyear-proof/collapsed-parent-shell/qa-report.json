@@ -1,0 +1,24 @@
+{
+  "readiness_state": "independent_verified",
+  "tooling_preflight": {
+    "available": true
+  },
+  "worker_coverage": [
+    {
+      "assignment_id": "pastyear-fixture-002",
+      "lane": "evidence",
+      "paper_ids": ["PY2025"],
+      "subpart_ids": ["B2(a)"],
+      "expected_output_path": "verifier-reports/evidence.json",
+      "child_thread_id": "child-thread-fixture-002",
+      "child_agent_id": "child-agent-fixture-002",
+      "raw_child_report_path": "raw-child/evidence.json",
+      "harvest_status": "harvested",
+      "wait_attempts": 1,
+      "continuation_attempts": 0,
+      "parent_validated": true,
+      "validation_result": "pass",
+      "missing_report_reason": ""
+    }
+  ]
+}

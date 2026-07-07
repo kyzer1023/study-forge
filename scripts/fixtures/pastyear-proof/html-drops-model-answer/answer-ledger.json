@@ -1,0 +1,13 @@
+{
+  "answers": [
+    {
+      "question_id": "H1(a)(i)",
+      "question_type": "coding",
+      "question_text": "Write pseudocode for a linear search over an array.",
+      "answer": "for i from 0 to n - 1:\n    if A[i] == key:\n        return i\nreturn -1",
+      "status": "Answered from source",
+      "student_explanation": "Scan the array from left to right and stop when the key is found.",
+      "source_refs": ["past-year-html:p2", "lecture-search:p9"]
+    }
+  ]
+}

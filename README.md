@@ -63,7 +63,13 @@ All commands run through `$study-forge`:
 | `$study-forge sheet` | Create a condensed revision sheet from source materials |
 | `$study-forge artifact` | Create a source-backed study artifact; defaults to `atlas` when no mode is given; use `past-year` for verifier-checked lecture-grounded past-paper answer packs |
 
-Learner HTML for `atlas` and `past-year` is study-first by default. Full Source Basis, Scope Boundaries, Verification Notes, manual QA results, lane evidence, and raw report references belong in sidecar proof files such as `qa-report.json`, `verifier-reports/`, and `answer-ledger.json`; the learner page shows only source gaps, unreadable notes, or limitations that affect studying.
+Learner HTML for `atlas` and `past-year` is study-first by default. Full Source Basis, Scope Boundaries, Verification Notes, manual QA results, lane evidence, and raw report references belong in sidecar proof files such as `qa-report.json`, `verifier-reports/`, and worker coverage reports; answer records stay in `answer-ledger.json`. The learner page shows only source gaps, unreadable notes, or limitations that affect studying.
+
+For `artifact past-year`, use a proof-plane split: `answer-ledger.json` is canonical for answer records and HTML rendering, while worker coverage metadata, verifier reports, readiness state, raw worker-report paths, lane evidence, and manual QA stay in sidecars such as `qa-report.json`, `verifier-reports/`, and worker coverage reports. The learner HTML must render from the ledger, not from ad hoc HTML edits or worker reports.
+
+Exam-worthy past-year output means the learner page shows mark-bearing model answers from `answer-ledger.answer`, not short hints. Worked steps, code/pseudocode, traces, tables, trees, diagrams, formulas, and objective-answer reasoning must be present when marks require them. `student_explanation` is supporting why-it-is-right prose, not a replacement model answer.
+
+Do not call a short hint a model answer. Do not mark a visual question `Unreadable` only because text extraction failed when a rendered page image exists; inspect the visual payload or record why it is unusable. Do not call `fallback_local`, `fallback_local_reviewed`, stale verifier output, or unresolved major findings exam-ready or independently verified.
 
 ### Usage Examples
 
@@ -133,6 +139,10 @@ The shared contract lives in `skills/references/delegation.md`. `$study-forge in
 
 For course folder workflows, route index first and source-pack first. The pack is the access layer; original PDFs, slides, screenshots, notebooks, and code remain authoritative and must be reopened for stale hashes, missing records, low-confidence visual interpretation, source gaps, unreadable pages, or spot checks.
 
+For `artifact past-year`, the skill defines the output shape and proof contract while the OmO/Codex harness decides the source work needed from the materials. Source gap is a last-resort status after source-pack lookup, original-source inspection, and answer synthesis. A broad over-gapped fallback from a local answer map is degraded output, not normal delivery, unless the user gives explicit degraded acceptance.
+
+Past-year proof requires atomic mark-bearing subpart extraction, syllabus-fit classification, and worker coverage metadata. Every answerable subpart with marks needs its own inventory and ledger identity. Old-paper topics outside the current syllabus/current lecture/source-pack authority are `Out of scope` with evidence; in-scope items that remain unsupported after source-pack lookup, original-source inspection, and answer synthesis are `Source gap` with failed lookup/inspection/synthesis evidence.
+
 Keeping `agents/*.toml` in this repo or installing only the Study Forge skill does not register those TOMLs as live Codex agents. The tracked TOMLs are harness prompt templates and optional role definitions; normal Study Forge docs, artifact work, and verification passes should not copy files into `C:\Users\kyzer\.codex\agents` unless the user explicitly asks for that install.
 
 Fallback when a named role is not installed or not exposed by the active worker tool: spawn a normal Codex worker for the needed lane, then paste the relevant lane instructions from `skills/references/delegation.md`, `skills/references/studyforge-indexer.md`, or `skills/references/studyforge-verifier.md`.
@@ -148,7 +158,9 @@ Verifier readiness states:
 
 For `artifact past-year`, use copied verifier instructions only as the normal-worker fallback path, keep `fallback_local`, `fallback_local_reviewed`, and `baseline_unverified` visibly degraded, and rerun through workers if multi-agent tooling is discovered late.
 
-A local pass is not `subagent-verified`.
+A local pass is not `subagent-verified`. `fallback_local`, `fallback_local_reviewed`, `baseline_unverified`, `degraded_parent_shell`, and missing worker reports cannot be called `independent_verified`.
+
+Fresh sidecar proof matters for readiness wording. Final gates must run after the rendered HTML and proof sidecars they certify, and they must name resolved or intentionally retained findings instead of hiding stale `BLOCKING` or `MAJOR` verifier reports behind green summary language.
 
 ## Design Principles
 

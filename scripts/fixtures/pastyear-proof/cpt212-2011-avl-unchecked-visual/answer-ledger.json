@@ -1,0 +1,18 @@
+{
+  "answers": [
+    {
+      "question_id": "cpt212-2011-may-2011-q2-a-i",
+      "anchor_id": "cpt212-2011-may-q2-a-i",
+      "question_type": "structured",
+      "question_text": "Using the AVL tree shown in the question page, show the resulting tree after the requested operation.",
+      "answer": "",
+      "status": "Unreadable",
+      "student_explanation": "Text extraction did not recover the AVL tree node structure.",
+      "unreadable_reason": "pdftotext missed the visual AVL tree.",
+      "rendered_page_image": "C:\\CS_USM\\Y2S2\\CPT212\\.study-forge\\source-pack\\rendered-pages\\past-year-cpt212-11-may-pdf-p0003-3.png",
+      "visual_locator": "past-year-cpt212-11-may-pdf:p3#q2-a-i",
+      "text_extraction_status": "visual_payload_missing",
+      "source_refs": []
+    }
+  ]
+}

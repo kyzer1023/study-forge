@@ -1,0 +1,23 @@
+{
+  "assignment_id": "pastyear-fallback-fixture-001",
+  "lane": "fallback-local-review",
+  "paper_ids": ["PY-FALLBACK"],
+  "subpart_ids": ["F1(a)(i)"],
+  "expected_output_path": "verifier-reports/evidence.json",
+  "child_thread_id": "local-review-thread",
+  "child_agent_id": "local-review-agent",
+  "raw_child_report_path": "raw-child/evidence.json",
+  "harvest_status": "harvested",
+  "wait_attempts": 0,
+  "continuation_attempts": 0,
+  "parent_validated": true,
+  "validation_result": "pass",
+  "missing_report_reason": "",
+  "status": "PASS",
+  "readiness_state": "fallback_local_reviewed",
+  "invocation_mode": "fallback_local",
+  "tooling_preflight": {
+    "available": false
+  },
+  "findings": []
+}

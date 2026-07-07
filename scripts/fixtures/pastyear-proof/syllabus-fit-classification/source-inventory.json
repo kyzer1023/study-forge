@@ -1,0 +1,14 @@
+{
+  "current_syllabus_authority": {
+    "source_id": "syllabus-2026",
+    "title": "Current CPT212 syllabus authority",
+    "source_refs": ["source-index:syllabus-2026#course-outline"]
+  },
+  "papers": [
+    {
+      "paper_id": "PY2024",
+      "source_id": "past-year-2024",
+      "kind": "past_year_paper"
+    }
+  ]
+}

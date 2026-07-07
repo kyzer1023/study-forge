@@ -1,0 +1,53 @@
+{
+  "papers": [
+    {
+      "paper_id": "PY2024",
+      "title": "Past Year 2024",
+      "extraction_granularity": {
+        "status": "complete_child_subparts",
+        "source_structure_evidence": [
+          {
+            "source_ref": "past-year-2024:p7",
+            "observation": "B3(a) and B3(b) are separate mark-bearing child subparts."
+          }
+        ],
+        "expected_answerable_subparts": [
+          {
+            "question_id": "B3(a)",
+            "parent_question_id": "B3",
+            "marks": 4,
+            "status": "Out of scope"
+          },
+          {
+            "question_id": "B3(b)",
+            "parent_question_id": "B3",
+            "marks": 4,
+            "status": "Source gap"
+          }
+        ]
+      },
+      "questions": [
+        {
+          "question_id": "B3",
+          "question_type": "subjective",
+          "subparts": [
+            {
+              "question_id": "B3(a)",
+              "parent_question_id": "B3",
+              "question_type": "subjective",
+              "marks": 4,
+              "status": "Out of scope"
+            },
+            {
+              "question_id": "B3(b)",
+              "parent_question_id": "B3",
+              "question_type": "subjective",
+              "marks": 4,
+              "status": "Source gap"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

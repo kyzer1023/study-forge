@@ -1,0 +1,16 @@
+{
+  "tooling_preflight": {
+    "available": true
+  },
+  "thread_spawn_edges": [
+    {
+      "child_thread_id": "child-thread-fixture-002",
+      "child_agent_id": "child-agent-fixture-002"
+    }
+  ],
+  "spawn_wait_close_calls": [
+    {
+      "target": "child-thread-fixture-002"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "answers": [
+    {
+      "question_id": "F1(a)(i)",
+      "question_type": "definition",
+      "question_text": "Define a binary search tree.",
+      "answer": "A binary search tree is a binary tree where every left-subtree key is less than the node key and every right-subtree key is greater than the node key.",
+      "status": "Answered from source",
+      "student_explanation": "The ordering property makes searching efficient when the tree is balanced.",
+      "source_refs": ["lecture-tree:p7"]
+    }
+  ]
+}

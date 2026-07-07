@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Final
 
 from .io_utils import write_file
 from .model import (
+    ARTIFACT_PAST_YEAR_ROUTING_TOKENS,
     COMMAND_REQUIREMENTS,
     HOOK_AUTHORIZATION_SENTENCE,
     JsonObject,
@@ -14,11 +14,7 @@ from .model import (
     PROMPT_TOKENS,
     SHARED_TOKENS,
 )
-
-AUDIT_FREE_LEARNER_HTML: Final = (
-    "<!doctype html><html><body><main><h1>Revision Atlas</h1>"
-    + "<p>Source gap: unreadable annotation.</p></main></body></html>"
-)
+from .self_test_html_fixtures import AUDIT_FREE_LEARNER_HTML
 
 
 def json_fixture(value: JsonObject) -> str:
@@ -100,6 +96,82 @@ def incomplete_preflight_pack() -> JsonObject:
     }
 
 
+def over_gapped_past_year_ledger() -> JsonObject:
+    return {
+        "schema_version": "study-forge-answer-ledger.v1",
+        "readiness_state": "baseline_unverified",
+        "entries": [
+            {
+                "paper_id": "paper-all-gap",
+                "question_id": f"Q{index}",
+                "status": "Source gap",
+                "source_gap_reason": "No hard-coded answer was available.",
+            }
+            for index in range(1, 5)
+        ],
+    }
+
+
+def baseline_past_year_qa_report() -> JsonObject:
+    return {
+        "schema_version": "study-forge-past-year-qa-report.v1",
+        "readiness_state": "baseline_unverified",
+        "post_repair_state": "Local fallback generated answer-ledger shell.",
+    }
+
+
+def synthesized_past_year_qa_report() -> JsonObject:
+    return {
+        "schema_version": "study-forge-past-year-qa-report.v1",
+        "readiness_state": "fallback_local_reviewed",
+        "answer-production gate": {
+            "source-pack lookup": "checked topic index and source locators",
+            "original-source inspection": "opened affected source pages before deciding gaps",
+            "answer_synthesis": "attempted for each answerable item",
+        },
+    }
+
+
+def negated_synthesis_past_year_qa_report() -> JsonObject:
+    return {
+        "schema_version": "study-forge-past-year-qa-report.v1",
+        "readiness_state": "baseline_unverified",
+        "post_repair_state": "Answer synthesis was skipped because no local answer template existed.",
+    }
+
+
+def skipped_structured_synthesis_past_year_qa_report() -> JsonObject:
+    return {
+        "schema_version": "study-forge-past-year-qa-report.v1",
+        "readiness_state": "baseline_unverified",
+        "answer-production gate": {
+            "source-pack lookup": "checked topic index and source locators",
+            "original-source inspection": "opened source pages",
+            "answer_synthesis": "skipped",
+        },
+    }
+
+
+def not_run_structured_synthesis_past_year_qa_report() -> JsonObject:
+    return {
+        "schema_version": "study-forge-past-year-qa-report.v1",
+        "readiness_state": "baseline_unverified",
+        "answer-production gate": {
+            "source-pack lookup": "checked topic index and source locators",
+            "original-source inspection": "opened source pages",
+            "answer_synthesis": "not run",
+        },
+    }
+
+
+def accepted_degraded_past_year_qa_report() -> JsonObject:
+    return {
+        "schema_version": "study-forge-past-year-qa-report.v1",
+        "readiness_state": "fallback_local_reviewed",
+        "explicit_user_acceptance": "User accepted degraded output with over-gapped fallback limitations visible.",
+    }
+
+
 def write_valid_fixture(root: Path) -> None:
     hook_line = (
         f"{HOOK_AUTHORIZATION_SENTENCE} If the user says local only, no subagents, "
@@ -130,6 +202,8 @@ def write_valid_fixture(root: Path) -> None:
         "references/delegation.md source-heavy second user approval validates worker output "
         + "OmO/Codex harness main thread acts as conductor while worker lanes own source extraction "
         + "Run index first and use source-pack first. Preserve Source gap "
+        + " ".join(ARTIFACT_PAST_YEAR_ROUTING_TOKENS)
+        + " "
         + f"{hook_line}"
     )
     write_file(root, "skills/SKILL.md", skill_routing)
@@ -161,7 +235,10 @@ def write_command_reference(root: Path, relative_path: str, tokens: tuple[str, .
         write_file(root, relative_path, text + " ".join(tokens) + "\n")
         return
     if relative_path == "skills/references/artifact.md":
-        text = " ".join(tokens) + "\nLearner HTML is audit-free by default. Source Basis, Scope Boundaries, Verification Notes, Manual QA status, raw verifier lane status, lane_evidence, and raw_report references stay in sidecar proof files, qa-report.json, verifier-reports, and answer-ledger.json.\n"
+        text = (
+            " ".join(tokens)
+            + "\nLearner HTML is audit-free by default. Source Basis, Scope Boundaries, Verification Notes, Manual QA status, raw verifier lane status, lane_evidence, and raw_report references stay in sidecar proof files, qa-report.json, verifier-reports, and answer-ledger.json.\n"
+        )
         write_file(root, relative_path, text)
         return
     write_file(root, relative_path, " ".join(tokens))

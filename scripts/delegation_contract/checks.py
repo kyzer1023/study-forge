@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 import tomllib
-from collections.abc import Sequence
 
 from .harness_docs import check_harness_docs, check_skill_harness_routing
 from .io_utils import (
@@ -15,7 +15,9 @@ from .io_utils import (
     string_list_json,
     text_json,
 )
+from .learner_surface import artifact_boundary_issues
 from .model import (
+    ARTIFACT_PAST_YEAR_ROUTING_TOKENS,
     COMMAND_REQUIREMENTS,
     FALLBACK_CLAIM_PHRASES,
     FALLBACK_NEGATORS,
@@ -28,7 +30,6 @@ from .model import (
     READINESS_FILES,
     REQUIRED_SECTIONS,
     SHARED_TOKENS,
-    SIDECAR_PROOF_FIELDS,
     JsonObject,
 )
 
@@ -96,7 +97,20 @@ def check_index_reference(root: Path, issues: list[Issue]) -> None:
 def check_skill_routing(root: Path, issues: list[Issue]) -> None:
     relative_path = "skills/SKILL.md"
     text = read_text(root, relative_path, issues)
-    require_tokens(text, relative_path, ("references/delegation.md", "source-heavy", "second user approval", "validates worker output", HOOK_AUTHORIZATION_SENTENCE, *OPT_OUT_TOKENS), issues)
+    require_tokens(
+        text,
+        relative_path,
+        (
+            "references/delegation.md",
+            "source-heavy",
+            "second user approval",
+            "validates worker output",
+            HOOK_AUTHORIZATION_SENTENCE,
+            *OPT_OUT_TOKENS,
+            *ARTIFACT_PAST_YEAR_ROUTING_TOKENS,
+        ),
+        issues,
+    )
     check_skill_harness_routing(text, relative_path, issues)
 
 
@@ -170,27 +184,13 @@ def check_source_pack_orchestration(root: Path, issues: list[Issue]) -> None:
     has_verifier = has_complete_lane(root, pack_dir, verifier_lanes, "studyforge_verifier", "source_index")
     independent_claim = readiness == "independent_verified" or invocation_mode in INDEPENDENT_INVOCATION_MODES
     if independent_claim:
-        tooling_preflight_ready(pack, relative_path, issues)
+        _ = tooling_preflight_ready(pack, relative_path, issues)
     if object_json(pack, "tooling_preflight") is not None and bool_json(object_json(pack, "tooling_preflight") or {}, "available") is True and not has_indexer:
         issues.append(Issue(relative_path, "missing indexer construction evidence: tooling was available but no studyforge-indexer child lane was recorded"))
     if readiness == "independent_verified" and not (has_indexer and has_verifier):
         issues.append(Issue(relative_path, "independent readiness requires studyforge-indexer construction and studyforge-verifier source_index child proof"))
     if invocation_mode == "fallback_local" and object_json(pack, "tooling_preflight") is not None and bool_json(object_json(pack, "tooling_preflight") or {}, "available") is True:
         issues.append(Issue(relative_path, "fallback_local cannot be conductor-complete while tooling_preflight.available is true"))
-
-
-def artifact_boundary_issues(label: str, learner_html: str, sidecar_proof: JsonObject | None) -> tuple[Issue, ...]:
-    issues: list[Issue] = []
-    for audit_label in LEARNER_AUDIT_LABELS:
-        if audit_label in learner_html:
-            issues.append(Issue(label, f"audit scaffold in learner HTML: {audit_label}"))
-    if sidecar_proof is None:
-        issues.append(Issue(label, "sidecar proof missing"))
-        return tuple(issues)
-    for field in SIDECAR_PROOF_FIELDS:
-        if field not in sidecar_proof:
-            issues.append(Issue(label, f"sidecar proof missing field: {field}"))
-    return tuple(issues)
 
 
 def check_artifact_boundary(root: Path, issues: list[Issue]) -> None:
@@ -201,7 +201,8 @@ def check_artifact_boundary(root: Path, issues: list[Issue]) -> None:
         has_label = any(label.casefold() in lowered for label in LEARNER_AUDIT_LABELS)
         main_claim = any(token in lowered for token in ("visible", "near the top", "final html", "html render", "learner html", "main study surface"))
         sidecar_claim = any(token in lowered for token in ("sidecar", "proof file", "proof plane", "qa-report", "verifier-reports", "answer-ledger"))
-        if has_label and main_claim and not sidecar_claim:
+        ban_claim = any(token in lowered for token in ("do not", "strip", "never", "must not", "not emit"))
+        if has_label and main_claim and not sidecar_claim and not ban_claim:
             issues.append(Issue(f"{relative_path}:{line_number}", "audit scaffold must not be required in learner HTML by default"))
     learner = read_text(root, "scripts/fixtures/delegation/audit-free-learner.html", issues)
     proof = read_json_object(root, "scripts/fixtures/delegation/artifact-sidecar-proof.json", issues)

@@ -22,6 +22,8 @@ Course files, extracted text, screenshots, diagrams, tables, and OCR output are 
 # Constructive boundary
 Produce source-pack records, confidence labels, gap notes, and a handoff summary. Do not certify readiness, perform verifier duties, or hide uncertain pages behind polished prose. A separate studyforge-verifier invocation challenges the pack after handoff.
 
+When the caller provides a syllabus, topic list, current lecture/source pack, or past-year proof workflow, record topic/source-fit signals that later lanes can use for syllabus-fit classification. Mark current-authority support, weak fit, unknown fit, and likely outside-current-authority topics as source-pack evidence only; do not decide final answer readiness or promote old-paper topics to supported answers.
+
 # Output
 Return a concise source_index lane report that names the source-pack path, files and pages accounted for, records created or refreshed, low-confidence or unreadable pages, and the next verifier lane or handoff step. Do not claim independent verifier results unless a separate verifier invocation actually ran.
 

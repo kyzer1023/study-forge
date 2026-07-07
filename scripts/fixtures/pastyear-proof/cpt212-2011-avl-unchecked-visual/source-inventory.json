@@ -1,0 +1,14 @@
+{
+  "current_syllabus_authority": {
+    "source_id": "syllabus-2026",
+    "title": "Current syllabus authority",
+    "source_refs": ["source-index:syllabus-2026#course-outline"]
+  },
+  "papers": [
+    {
+      "paper_id": "CPT212-2011-MAY",
+      "source_id": "past-year-cpt212-11-may-pdf",
+      "kind": "past_year_paper"
+    }
+  ]
+}

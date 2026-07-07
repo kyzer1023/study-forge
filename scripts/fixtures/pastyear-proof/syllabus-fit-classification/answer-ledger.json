@@ -1,0 +1,18 @@
+{
+  "answers": [
+    {
+      "question_id": "B3(a)",
+      "question_type": "subjective",
+      "question_text": "Explain a deprecated syllabus topic.",
+      "answer": "",
+      "status": "Out of scope"
+    },
+    {
+      "question_id": "B3(b)",
+      "question_type": "subjective",
+      "question_text": "Explain a topic that should be answerable but was not found in the sources.",
+      "answer": "",
+      "status": "Source gap"
+    }
+  ]
+}

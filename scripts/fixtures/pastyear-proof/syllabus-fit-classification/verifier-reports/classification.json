@@ -1,0 +1,10 @@
+{
+  "lane": "classification",
+  "status": "PASS",
+  "readiness_state": "baseline_unverified",
+  "invocation_mode": "local_fixture",
+  "tooling_preflight": {
+    "available": true
+  },
+  "findings": []
+}

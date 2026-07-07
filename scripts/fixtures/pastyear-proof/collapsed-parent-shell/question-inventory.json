@@ -1,0 +1,52 @@
+{
+  "papers": [
+    {
+      "paper_id": "PY2025",
+      "title": "Past Year 2025",
+      "extraction_granularity": {
+        "status": "collapsed",
+        "source_structure_evidence": [
+          {
+            "source_ref": "past-year-2025:p4",
+            "observation": "The PDF shows B2(a)(i), B2(a)(ii), and B2(a)(iii), but the inventory collapsed them into B2(a)."
+          }
+        ],
+        "expected_answerable_subparts": [
+          {
+            "question_id": "B2(a)(i)",
+            "parent_question_id": "B2(a)",
+            "marks": 2,
+            "status": "Answerable"
+          },
+          {
+            "question_id": "B2(a)(ii)",
+            "parent_question_id": "B2(a)",
+            "marks": 2,
+            "status": "Answerable"
+          },
+          {
+            "question_id": "B2(a)(iii)",
+            "parent_question_id": "B2(a)",
+            "marks": 2,
+            "status": "Answerable"
+          }
+        ]
+      },
+      "questions": [
+        {
+          "question_id": "B2(a)",
+          "question_type": "subjective",
+          "subparts": [
+            {
+              "question_id": "B2(a)",
+              "parent_question_id": "B2",
+              "question_type": "subjective",
+              "marks": 6,
+              "status": "Answered from source"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

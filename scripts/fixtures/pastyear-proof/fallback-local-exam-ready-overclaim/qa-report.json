@@ -1,0 +1,32 @@
+{
+  "readiness_state": "fallback_local_reviewed",
+  "tooling_preflight": {
+    "available": false
+  },
+  "final_parent_gate_claim": "exam-ready learner answers from fallback_local answer production",
+  "answer_production": [
+    {
+      "lane": "paper-answer",
+      "invocation_mode": "fallback_local",
+      "student_facing_claim": "exam_ready"
+    }
+  ],
+  "worker_coverage": [
+    {
+      "assignment_id": "pastyear-fallback-fixture-001",
+      "lane": "fallback-local-review",
+      "paper_ids": ["PY-FALLBACK"],
+      "subpart_ids": ["F1(a)(i)"],
+      "expected_output_path": "verifier-reports/evidence.json",
+      "child_thread_id": "local-review-thread",
+      "child_agent_id": "local-review-agent",
+      "raw_child_report_path": "raw-child/evidence.json",
+      "harvest_status": "harvested",
+      "wait_attempts": 0,
+      "continuation_attempts": 0,
+      "parent_validated": true,
+      "validation_result": "pass",
+      "missing_report_reason": ""
+    }
+  ]
+}

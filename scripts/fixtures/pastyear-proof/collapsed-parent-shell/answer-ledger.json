@@ -1,0 +1,13 @@
+{
+  "answers": [
+    {
+      "question_id": "B2(a)",
+      "question_type": "subjective",
+      "question_text": "Collapsed parent answer for B2(a).",
+      "answer": "This answer incorrectly covers all child subparts as one parent shell.",
+      "status": "Answered from source",
+      "student_explanation": "The source was treated as one combined answer.",
+      "source_refs": ["lecture-ch2:p12"]
+    }
+  ]
+}

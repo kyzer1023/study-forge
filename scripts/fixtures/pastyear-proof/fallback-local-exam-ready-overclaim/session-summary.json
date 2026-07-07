@@ -1,0 +1,16 @@
+{
+  "tooling_preflight": {
+    "available": false
+  },
+  "thread_spawn_edges": [
+    {
+      "child_thread_id": "local-review-thread",
+      "child_agent_id": "local-review-agent"
+    }
+  ],
+  "spawn_wait_close_calls": [
+    {
+      "target": "local-review-thread"
+    }
+  ]
+}

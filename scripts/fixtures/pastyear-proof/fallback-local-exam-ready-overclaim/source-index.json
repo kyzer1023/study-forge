@@ -1,0 +1,19 @@
+{
+  "sources": [
+    {
+      "source_id": "past-year-fallback",
+      "title": "Past Year Fallback Regression",
+      "path": "fixtures/past-year-fallback.pdf"
+    },
+    {
+      "source_id": "lecture-tree",
+      "title": "Tree Lecture",
+      "path": "fixtures/lecture-tree.pdf"
+    },
+    {
+      "source_id": "syllabus-2026",
+      "title": "Current syllabus authority",
+      "path": "fixtures/syllabus-2026.pdf"
+    }
+  ]
+}

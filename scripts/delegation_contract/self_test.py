@@ -1,31 +1,46 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from pathlib import Path
 import tempfile
 
-from .checks import artifact_boundary_issues, check_truthfulness, validate
+from .checks import check_truthfulness, validate
 from .harness_contract import check_harness_contract
 from .io_utils import write_file
 from .model import (
     FixtureCase,
     HOOK_AUTHORIZATION_SENTENCE,
     Issue,
-    JsonObject,
     OPT_OUT_TOKENS,
     PROMPT_TOKENS,
     REQUIRED_SECTIONS,
     SHARED_TOKENS,
 )
 from .self_test_fixtures import (
+    accepted_degraded_past_year_qa_report,
+    baseline_past_year_qa_report,
     fallback_pack_without_indexer,
     incomplete_preflight_pack,
     json_fixture,
     missing_sidecar_proof,
+    negated_synthesis_past_year_qa_report,
+    not_run_structured_synthesis_past_year_qa_report,
+    over_gapped_past_year_ledger,
+    skipped_structured_synthesis_past_year_qa_report,
+    synthesized_past_year_qa_report,
     valid_sidecar_proof,
     write_valid_fixture,
     write_valid_pack,
 )
+from .self_test_expectations import (
+    expect_artifact_boundary_clean,
+    expect_artifact_boundary_issues,
+    expect_clean_fixture,
+    expect_issue,
+    expect_past_year_answer_production_clean,
+    expect_past_year_answer_production_issue,
+    print_result,
+)
+from .self_test_html_fixtures import BAD_PAST_YEAR_LEARNER_HTML, PAST_YEAR_LEARNER_WITHOUT_SCRIPT_FONTS_HTML, SCRIPT_PAST_YEAR_LEARNER_HTML
 from .self_test_harness_cases import clean_harness_cases, harness_contract_cases, production_harness_cases
 
 
@@ -100,18 +115,30 @@ def require_audit_heavy_learner_html(root: Path) -> None:
     write_file(root, "skills/references/artifact.md", "source_research verifier qa_executor final_reviewer fallback_local Source Basis visible Scope Boundaries visible Verification Notes section Manual QA status")
 
 
-def expect_issue(case: FixtureCase) -> bool:
-    with tempfile.TemporaryDirectory() as temp_dir:
-        root = Path(temp_dir)
-        write_valid_fixture(root)
-        case.mutate(root)
-        issues = validate(root)
-    if any(case.expected in issue.detail for issue in issues):
-        print(f"SELF-TEST RED {case.label}: PASS expected {case.expected}")
-        return True
-    print(f"FAIL self-test {case.label}: expected {case.expected}")
-    print_result(issues)
-    return False
+def remove_answer_production_gate(root: Path) -> None:
+    write_file(
+        root,
+        "skills/references/artifact.md",
+        "source_research verifier qa_executor final_reviewer fallback_local Source gap answer-ledger qa-report",
+    )
+
+
+def remove_past_year_design_bridge(root: Path) -> None:
+    write_file(
+        root,
+        "skills/SKILL.md",
+        "references/delegation.md references/artifact.md source-heavy second user approval validates worker output "
+        + f"{HOOK_AUTHORIZATION_SENTENCE} local only no subagents no delegation restricts tool use "
+        + "answer-production gate Source gap is a last-resort status over-gapped fallback",
+    )
+    write_file(
+        root,
+        "skills/references/artifact.md",
+        "source_research verifier qa_executor final_reviewer fallback_local "
+        + "answer-production gate Source gap is a last-resort status source-pack lookup "
+        + "original-source inspection answer synthesis explicit degraded acceptance over-gapped fallback "
+        + "Learner HTML is audit-free by default. Proof details stay in sidecar proof files.",
+    )
 
 
 def delegation_harness_issues(root: Path) -> tuple[Issue, ...]:
@@ -126,54 +153,6 @@ def truthfulness_issues(root: Path) -> tuple[Issue, ...]:
     issues: list[Issue] = []
     check_truthfulness(root, issues)
     return tuple(issues)
-
-
-def expect_direct_issue(case: FixtureCase, collect_issues: Callable[[Path], tuple[Issue, ...]]) -> bool:
-    with tempfile.TemporaryDirectory() as temp_dir:
-        root = Path(temp_dir)
-        write_valid_fixture(root)
-        case.mutate(root)
-        issues = collect_issues(root)
-    if any(case.expected in issue.detail for issue in issues):
-        print(f"SELF-TEST RED {case.label}: PASS expected {case.expected}")
-        return True
-    print(f"FAIL self-test {case.label}: expected {case.expected}")
-    print_result(issues)
-    return False
-
-
-def expect_clean_fixture(label: str, mutate: Callable[[Path], None]) -> bool:
-    with tempfile.TemporaryDirectory() as temp_dir:
-        root = Path(temp_dir)
-        write_valid_fixture(root)
-        mutate(root)
-        issues = validate(root)
-    if not issues:
-        print(f"SELF-TEST GREEN {label}: PASS")
-        return True
-    print(f"FAIL self-test {label}: expected clean fixture")
-    print_result(issues)
-    return False
-
-
-def expect_artifact_boundary_issue(label: str, learner_html: str, sidecar_proof: JsonObject | None, expected: str) -> bool:
-    issues = artifact_boundary_issues(label, learner_html, sidecar_proof)
-    if any(expected in issue.detail for issue in issues):
-        print(f"SELF-TEST RED {label}: PASS expected {expected}")
-        return True
-    print(f"FAIL self-test {label}: expected {expected}")
-    print_result(issues)
-    return False
-
-
-def expect_artifact_boundary_clean(label: str, learner_html: str, sidecar_proof: JsonObject) -> bool:
-    issues = artifact_boundary_issues(label, learner_html, sidecar_proof)
-    if not issues:
-        print(f"SELF-TEST GREEN {label}: PASS")
-        return True
-    print(f"FAIL self-test {label}: expected artifact boundary pass")
-    print_result(issues)
-    return False
 
 
 def self_test_cases() -> tuple[FixtureCase, ...]:
@@ -192,6 +171,8 @@ def self_test_cases() -> tuple[FixtureCase, ...]:
         FixtureCase("missing-raw-child-report", write_missing_raw_report_pack, "raw child report path does not exist"),
         FixtureCase("incomplete-tooling-preflight", write_incomplete_preflight_pack, "tooling_preflight.checked"),
         FixtureCase("artifact-audit-heavy-contract", require_audit_heavy_learner_html, "audit scaffold"),
+        FixtureCase("missing-answer-production-gate", remove_answer_production_gate, "missing required token: answer-production gate"),
+        FixtureCase("missing-past-year-design-bridge", remove_past_year_design_bridge, "missing required token: references/past-year-design.md"),
     )
 
 
@@ -202,21 +183,62 @@ def truthfulness_cases() -> tuple[FixtureCase, ...]:
 
 
 def run_self_test() -> int:
-    if not all(expect_direct_issue(case, delegation_harness_issues) for case in harness_contract_cases()):
+    if not all(expect_issue(case, delegation_harness_issues) for case in harness_contract_cases()):
         return 1
-    if not all(expect_direct_issue(case, truthfulness_issues) for case in truthfulness_cases()):
+    if not all(expect_issue(case, truthfulness_issues) for case in truthfulness_cases()):
         return 1
-    if not all(expect_clean_fixture(label, mutate) for label, mutate in clean_harness_cases()):
+    if not all(expect_clean_fixture(label, mutate, validate) for label, mutate in clean_harness_cases()):
         return 1
-    if not all(expect_issue(case) for case in self_test_cases()):
+    if not all(expect_issue(case, validate) for case in self_test_cases()):
+        return 1
+    over_gapped_ledger = over_gapped_past_year_ledger()
+    if not expect_past_year_answer_production_issue("over-gapped-local-fallback", over_gapped_ledger, baseline_past_year_qa_report(), "over-gapped fallback"):
+        return 1
+    if not expect_past_year_answer_production_issue("negated-answer-synthesis", over_gapped_ledger, negated_synthesis_past_year_qa_report(), "over-gapped fallback"):
+        return 1
+    if not expect_past_year_answer_production_issue("skipped-structured-answer-synthesis", over_gapped_ledger, skipped_structured_synthesis_past_year_qa_report(), "over-gapped fallback"):
+        return 1
+    if not expect_past_year_answer_production_issue("not-run-structured-answer-synthesis", over_gapped_ledger, not_run_structured_synthesis_past_year_qa_report(), "over-gapped fallback"):
+        return 1
+    if not expect_past_year_answer_production_clean("synthesis-attempted-source-gaps", over_gapped_ledger, synthesized_past_year_qa_report()):
+        return 1
+    if not expect_past_year_answer_production_clean("explicitly-accepted-degraded-gaps", over_gapped_ledger, accepted_degraded_past_year_qa_report()):
         return 1
     audit_free_html = "<main><h1>Revision Atlas</h1><p>Source gap: unreadable note.</p></main>"
     audit_heavy_html = "<main><h2>Source Basis</h2><p>Manual QA status and raw verifier lane status.</p></main>"
     sidecar_proof = valid_sidecar_proof()
     missing_sidecar = missing_sidecar_proof()
-    if not expect_artifact_boundary_issue("audit-heavy-learner", audit_heavy_html, sidecar_proof, "audit scaffold"):
+    if not expect_artifact_boundary_issues("audit-heavy-learner", audit_heavy_html, sidecar_proof, ("audit scaffold",)):
         return 1
-    if not expect_artifact_boundary_issue("artifact-sidecar-missing-proof", audit_free_html, missing_sidecar, "sidecar proof missing field"):
+    if not expect_artifact_boundary_issues("artifact-sidecar-missing-proof", audit_free_html, missing_sidecar, ("sidecar proof missing field",)):
+        return 1
+    if not expect_artifact_boundary_issues(
+        "audited-cpt212-learner-surface",
+        BAD_PAST_YEAR_LEARNER_HTML,
+        sidecar_proof,
+        (
+            "proof metadata in learner HTML: generated ",
+            "proof metadata in learner HTML: worker-report",
+            "proof metadata in learner HTML: answered from source",
+            "proof metadata in learner HTML: source_refs",
+            "metric cards",
+            "missing Script font stack",
+            "missing Script design tokens",
+            "missing hash router",
+            "missing reveal controls",
+            "missing left rail",
+            "all papers visible",
+        ),
+    ):
+        return 1
+    if not expect_artifact_boundary_clean("script-past-year-learner artifact-sidecar-proof", SCRIPT_PAST_YEAR_LEARNER_HTML, sidecar_proof):
+        return 1
+    if not expect_artifact_boundary_issues(
+        "past-year-learner-missing-script-fonts",
+        PAST_YEAR_LEARNER_WITHOUT_SCRIPT_FONTS_HTML,
+        sidecar_proof,
+        ("missing Script font stack",),
+    ):
         return 1
     if not expect_artifact_boundary_clean("audit-free-learner artifact-sidecar-proof", audit_free_html, sidecar_proof):
         return 1
@@ -230,12 +252,3 @@ def run_self_test() -> int:
         return 1
     print("PASS self-test delegation contract")
     return 0
-
-
-def print_result(issues: tuple[Issue, ...] | list[Issue]) -> None:
-    if not issues:
-        print("PASS delegation contract")
-        return
-    print("FAIL delegation contract")
-    for issue in issues:
-        print(f"ISSUE path={issue.path} detail={issue.detail}")

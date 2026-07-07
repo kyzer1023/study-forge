@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CST235 Past-Year Study Pack — Script theme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+:root {
+  --bg: oklch(96.5% 0.012 75);
+  --bg-raised: oklch(98.8% 0.008 75);
+  --surface: oklch(99.4% 0.006 80);
+  --ink: oklch(22% 0.02 265);
+  --ink-soft: oklch(48% 0.018 265);
+  --line: oklch(88% 0.014 75);
+  --line-strong: oklch(78% 0.02 75);
+  --focus: oklch(42% 0.14 275);
+  --focus-soft: oklch(94% 0.03 275);
+  --focus-ink: oklch(36% 0.12 275);
+  --correct: oklch(48% 0.13 152);
+  --correct-soft: oklch(94% 0.035 152);
+  --correct-ink: oklch(38% 0.11 155);
+  --gap: oklch(44% 0.1 25);
+  --gap-soft: oklch(95% 0.025 35);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-pop: cubic-bezier(0.34, 1.2, 0.64, 1);
+  --rail-w: 216px;
+  --content-max: 1000px;
+  --shell-max: min(1280px, calc(100vw - 40px));
+  --font-ui: Inter, system-ui, sans-serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.6;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.site-header {
+  padding: 36px 20px 20px;
+  max-width: var(--shell-max);
+  margin: 0 auto;
+}
+.site-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+  line-height: 1.15;
+}
+.site-header .lede {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+  max-width: 52ch;
+}
+
+/* ── Desk shell ─────────────────────────────────────── */
+.desk {
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  gap: 0;
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  padding: 0 20px 64px;
+  align-items: start;
+}
+
+/* ── Sidebar rails (papers + questions) ─────────────── */
+.rail-wrap {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  padding-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+nav.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-raised);
+  border-radius: 10px;
+  padding: 6px;
+  border: 1px solid var(--line);
+}
+.rail-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding: 6px 10px 4px;
+}
+.rail-item,
+.qnav-item {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  text-align: left;
+  padding: 10px 12px 10px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  position: relative;
+  transition: color 200ms var(--ease-out), background 200ms var(--ease-out);
+  text-decoration: none;
+  display: block;
+}
+.qnav-item {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.rail-item:hover:not([aria-current]),
+.qnav-item:hover:not([aria-current]) { background: var(--surface); color: var(--ink); }
+.rail-item[aria-current="true"],
+.qnav-item[aria-current="true"] {
+  background: var(--focus-soft);
+  color: var(--focus-ink);
+  font-weight: 600;
+}
+.rail-item[aria-current="true"]::before,
+.qnav-item[aria-current="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--focus);
+  border-radius: 1px;
+}
+.qnav-item.done {
+  color: var(--correct-ink);
+  background: var(--correct-soft);
+}
+.qnav-item.done[aria-current="true"] {
+  background: color-mix(in oklab, var(--correct-soft) 70%, var(--focus-soft));
+}
+.rail-item .count {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0.7;
+  margin-left: 6px;
+}
+
+/* ── Main column ────────────────────────────────────── */
+.main {
+  min-width: 0;
+  max-width: var(--content-max);
+  padding-left: 28px;
+}
+.view { display: none; }
+.view.active {
+  display: block;
+  animation: main-in 220ms var(--ease-out) both;
+}
+.view.leaving { animation: main-out 160ms ease both; }
+@keyframes main-in {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes main-out { to { opacity: 0; } }
+
+.paper-top { margin-bottom: 32px; }
+.paper-top h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* ── Question blocks (ruled, not cards) ─────────────── */
+.q {
+  padding: 28px 0;
+  border-top: 1px solid var(--line-strong);
+  scroll-margin-top: 24px;
+}
+.q:first-of-type { border-top: none; padding-top: 0; }
+
+.qhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 10px;
+  margin-bottom: 8px;
+}
+.qno {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--focus-ink);
+}
+.qmeta {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.gap-tag {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gap);
+  background: var(--gap-soft);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.stem {
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.45;
+  margin: 0 0 20px;
+  white-space: pre-wrap;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.options { list-style: none; margin: 0 0 4px; padding: 0; }
+.opt {
+  display: grid;
+  grid-template-columns: 28px 1fr 24px;
+  align-items: start;
+  gap: 10px;
+  padding: 7px 4px;
+  border-radius: 6px;
+  transition: background 520ms var(--ease-out), color 520ms var(--ease-out), opacity 400ms var(--ease-out);
+}
+.opt .label {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  transition: color 520ms var(--ease-out);
+}
+.opt .text {
+  text-align: justify;
+  text-justify: inter-word;
+}
+.opt .check {
+  width: 20px;
+  height: 20px;
+  opacity: 0;
+  transform: scale(0.5);
+  color: var(--correct);
+}
+.q.revealed:not(.gap-state) .opt.correct {
+  background: var(--correct-soft);
+  color: var(--correct);
+  font-weight: 500;
+}
+.q.revealed:not(.gap-state) .opt.correct .label { color: var(--correct); }
+.q.revealed:not(.gap-state) .opt.correct .check {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 380ms var(--ease-pop) 160ms, transform 380ms var(--ease-pop) 160ms;
+}
+.q.revealed:not(.gap-state) .opt:not(.correct) { opacity: 0.7; color: var(--ink-soft); }
+
+.reveal-btn {
+  appearance: none;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--focus-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in oklab, var(--focus) 40%, transparent);
+  cursor: pointer;
+  padding: 10px 0;
+  min-height: 44px;
+  margin-top: 8px;
+  transition: color 180ms, text-decoration-color 180ms;
+}
+.reveal-btn:hover { color: var(--focus); text-decoration-color: var(--focus); }
+
+.panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 480ms var(--ease-out); }
+.q.revealed .panel { grid-template-rows: 1fr; }
+.panel > .panel-inner { min-height: 0; overflow: hidden; }
+.panel-body {
+  border-top: 1px solid var(--line-strong);
+  padding-top: 20px;
+  margin-top: 4px;
+  white-space: pre-wrap;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 320ms var(--ease-out) 50ms, transform 320ms var(--ease-out) 50ms;
+}
+.q.revealed .panel-body { opacity: 1; transform: none; }
+.panel-body .head {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--correct-ink);
+  margin-bottom: 8px;
+}
+.q.gap-state .panel-body .head { color: var(--gap); }
+.q[data-kind="structured"] .panel-body .head { color: var(--focus-ink); }
+.panel-prose {
+  margin: 0;
+  text-align: justify;
+  text-justify: inter-word;
+}
+.panel-prose .katex { font-size: 1.05em; }
+
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding: 20px 20px 40px;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  max-width: var(--shell-max);
+  margin: 0 auto;
+}
+
+.rail-item:focus-visible,
+.qnav-item:focus-visible,
+.reveal-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  .desk {
+    grid-template-columns: 1fr;
+    padding: 0 16px 48px;
+  }
+  .rail-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background: color-mix(in oklab, var(--bg) 94%, transparent);
+    backdrop-filter: blur(4px);
+    padding: 8px 0 12px;
+    margin: 0 -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+    max-height: none;
+    overflow: visible;
+  }
+  nav.rail {
+    flex-direction: row;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  nav.rail::-webkit-scrollbar { display: none; }
+  nav.rail-questions {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  nav.rail-questions::-webkit-scrollbar { display: none; }
+  .rail-item,
+  .qnav-item { white-space: nowrap; flex-shrink: 0; }
+  .rail-item[aria-current="true"]::before,
+  .qnav-item[aria-current="true"]::before {
+    left: 6px; right: 6px; top: auto; bottom: 0; width: auto; height: 2px;
+  }
+  .main { padding-left: 0; max-width: none; }
+  .opt { grid-template-columns: 22px 1fr 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <h1>Past-Year Study Pack</h1>
+  <p class="lede">Pick a paper, work each question, then reveal. Correct options mark in green; worked answers expand below.</p>
+</header>
+
+<div class="desk">
+  <div class="rail-wrap">
+    <nav class="rail" id="paperRail" aria-label="Papers">
+      <div class="rail-label">Papers</div>
+    </nav>
+    <nav class="rail rail-questions" id="questionRail" aria-label="Questions in this paper">
+      <div class="rail-label">Questions</div>
+    </nav>
+  </div>
+  <main class="main" id="main" aria-live="polite"></main>
+</div>
+
+<footer class="site-footer">Study Forge · past-year-script design system · reference-mock.html</footer>
+
+<script>
+const PAPERS = [
+  {
+    slug: "paper-2021",
+    label: "2021",
+    title: "CST_PSY_2021",
+    questions: [
+      {
+        id: "2021-a01", no: "A1", kind: "mcq", marks: 1,
+        topic: "Internet, open standards, and layered services",
+        stem: "A network administrator decides to use open standard protocols for all its networking devices. Which of the following consequence is correct?",
+        options: [
+          "Communication in the network can only occur between devices from the same vendor.",
+          "PCs running different operating systems can exchange data without any problem.",
+          "To access internet, all users must subscribe to the same ISP.",
+          "Competition and innovation are limited to specific types of products."
+        ],
+        correct: 1,
+        explanation: "Open standards decouple protocols from vendors and operating systems. Any host that implements the standard stack can interoperate, which is exactly why heterogeneous machines exchange data over the Internet. The other options describe vendor lock-in effects that open standards remove."
+      },
+      {
+        id: "2021-a03", no: "A3", kind: "mcq", marks: 1,
+        topic: "Transport layer multiplexing, ports, and sockets",
+        stem: "Which of the following situation best describes usage of OSI\u2019s transport layer?",
+        options: [
+          "A student is using WhatsApp to call a friend. The unique identifier burned into the phone is a transport layer address used to contact another device on the same network.",
+          "A student is watching a YouTube video. The video and sound are encoded within the transport layer header.",
+          "A student opens two browser windows to access two websites simultaneously. The transport layer ensures the correct web page is delivered to the correct browser window.",
+          "An office worker accesses a corporate webserver. The transport layer formats the screen so the web page appears properly on any device."
+        ],
+        correct: 2,
+        explanation: "Delivering data to the right application process on one host is demultiplexing, done with port numbers and sockets at the transport layer. Option A describes MAC addressing (link layer), B describes encoding (application/presentation), and D describes presentation formatting."
+      },
+      {
+        id: "2021-a04", no: "A4", kind: "mcq", marks: 1,
+        topic: "Data link layer, MAC addressing, and switching",
+        stem: "A PC\u2019s network card will accept a frame based on the _____.",
+        options: [
+          "source IP address",
+          "destination IP address",
+          "source MAC address",
+          "destination MAC address",
+          "source port address",
+          "destination port address"
+        ],
+        correct: 3,
+        explanation: "A NIC operates at the data link layer, so it filters incoming frames by comparing the destination MAC address against its own (or a broadcast/multicast address). IP addresses and ports are only examined higher up the stack after the frame is accepted."
+      },
+      {
+        id: "2021-b1ai", no: "B1(a)(i)", kind: "structured", marks: 5,
+        topic: "IPv4 addressing and subnetting",
+        stem: "From 200.100.50.0/25, compute addresses allocated to Sales /27, Accounting /27, and Marketing /28.",
+        answer: "Each /27 block contains 2^(32\u221227) = 32 addresses and a /28 block contains 2^(32\u221228) = 16 addresses.\n\nSales /27 \u2192 32 addresses\nAccounting /27 \u2192 32 addresses\nMarketing /28 \u2192 16 addresses\n\nTotal allocated = 32 + 32 + 16 = 80 addresses."
+      },
+      {
+        id: "2021-b1aii", no: "B1(a)(ii)", kind: "structured", marks: 5,
+        topic: "IPv4 addressing and subnetting",
+        stem: "Compute addresses still available from the original 200.100.50.0/25 after the three allocations.",
+        answer: "A /25 block has 2^(32\u221225) = 128 addresses.\n\nRemaining = 128 \u2212 80 allocated = 48 addresses still available."
+      }
+    ]
+  },
+  {
+    slug: "paper-2023-24",
+    label: "2023\u201324",
+    title: "CST235_23_24",
+    questions: [
+      {
+        id: "2023-24-a15", no: "A15", kind: "mcq", marks: 2,
+        topic: "Security policy, SETA, and deterrence",
+        stem: "\u201cDeterrence\u201d is the best method for preventing an illegal or unethical practice. Laws and policies only deter if the following conditions are present: (Choose all that apply.)",
+        options: [
+          "Fear of penalty",
+          "Law enforcement",
+          "Imposed by management",
+          "The probability of being caught",
+          "The probability of penalty being administered"
+        ],
+        correct: [0, 1, 3, 4],
+        explanation: "Deterrence works when people believe the rule will actually bite: they fear the penalty, enforcement exists, they expect to be caught, and they expect the penalty to be applied. Management imposing a rule by itself deters nothing if those four beliefs are absent."
+      },
+      {
+        id: "2023-24-a16", no: "A16", kind: "mcq", marks: 2, gap: true,
+        topic: "Due care vs due diligence",
+        stem: "How does due diligence differ from due care?",
+        options: [
+          "Due care is the strong ongoing effort to protect others; due diligence is knowing acceptable behavior and its penalties.",
+          "Due diligence is the strong ongoing effort to protect others; due care is knowing acceptable behavior and its penalties.",
+          "Due care covers both the effort and the knowledge; due diligence covers liability only.",
+          "Due diligence covers both the effort and the knowledge; due care covers liability only.",
+          "Due care protects against liability; due diligence is the ongoing protective effort."
+        ],
+        correct: null,
+        explanation: "The scanned options for this question are ambiguous and no option can be confidently matched to the lecture definitions. Study the concepts directly instead: due care means acting as a reasonable organization would (implementing protections); due diligence means continuously maintaining and verifying those protections over time."
+      }
+    ]
+  },
+  {
+    slug: "paper-2024-25",
+    label: "2024\u201325",
+    title: "CST235_24_25",
+    questions: [
+      {
+        id: "2024-25-a01", no: "A1", kind: "mcq", marks: 1,
+        topic: "Information security principles and CIA",
+        stem: "Which CIA property is violated when an attacker modifies a database record in transit?",
+        options: [
+          "Confidentiality",
+          "Integrity",
+          "Availability",
+          "Authentication"
+        ],
+        correct: 1,
+        explanation: "Integrity guarantees that data is not altered by unauthorized parties. Modification in transit breaks that guarantee. Confidentiality concerns disclosure, availability concerns access, and authentication is a supporting mechanism rather than a CIA property."
+      },
+      {
+        id: "2024-25-b2a", no: "B2(a)", kind: "structured", marks: 6,
+        topic: "Incident response and contingency planning",
+        stem: "Describe the steps a first responder should take to preserve digital evidence after a database breach is discovered.",
+        answer: "1. Isolate the affected system without powering it off, so volatile evidence and disk state are preserved.\n2. Attach a write blocker before reading the drive so nothing is written back to it.\n3. Create a bit-stream image of the disk and compute cryptographic hashes of both the original and the image to prove integrity.\n4. Document every action in a chain-of-custody log: who handled what, when, and why.\n\nMarkers look for: evidence preservation, containment, and documentation."
+      }
+    ]
+  }
+];
+
+const LETTERS = "ABCDEFGH";
+const mainEl = document.getElementById("main");
+const revealed = new Set();
+
+function esc(s) {
+  return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+/** Turn plain notation (2^(32-27), 10^-5) into KaTeX inline delimiters. */
+function formatMathText(text) {
+  return text.split("\n").map(line => {
+    let s = esc(line);
+    s = s.replace(/(\d)\^\(([^)]+)\)/g, (_, base, exp) =>
+      `$${base}^{${exp.replace(/\u2212/g, "-")}}$`);
+    s = s.replace(/(\d)\^([-−]?\d+)/g, (_, base, exp) =>
+      `$${base}^{${exp.replace(/\u2212/g, "-")}}$`);
+    return s;
+  }).join("<br>");
+}
+
+function typesetMath(el) {
+  if (!el || el.dataset.mathdone || typeof renderMathInElement !== "function") return;
+  renderMathInElement(el, {
+    delimiters: [{ left: "$", right: "$", display: false }],
+    throwOnError: false,
+  });
+  el.dataset.mathdone = "1";
+}
+
+function panelLabel(q) {
+  if (q.kind === "structured") return "Model answer";
+  if (q.gap) return "Study note";
+  return "Why";
+}
+
+function renderQuestion(q) {
+  const correctSet = new Set(q.correct == null ? [] : [].concat(q.correct));
+  const meta = `${q.kind === "mcq" ? "objective" : "structured"} \u00b7 ${q.marks} mark${q.marks > 1 ? "s" : ""} \u00b7 ${esc(q.topic)}`;
+  let optionsHtml = "";
+  if (q.kind === "mcq" && q.options) {
+    optionsHtml = `<ul class="options" role="list">` + q.options.map((opt, idx) => `
+      <li class="opt${correctSet.has(idx) ? " correct" : ""}">
+        <span class="label">${LETTERS[idx]}</span>
+        <span class="text">${esc(opt)}</span>
+        <svg class="check" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </li>`).join("") + `</ul>`;
+  }
+  const panelText = q.kind === "mcq" ? q.explanation : q.answer;
+  return `
+  <article class="q${q.gap ? " gap-state" : ""}" id="${q.id}" data-kind="${q.kind}">
+    <div class="qhead">
+      <span class="qno">${esc(q.no)}</span>
+      <span class="qmeta">${meta}</span>
+      ${q.gap ? '<span class="gap-tag">Source gap</span>' : ""}
+    </div>
+    <p class="stem">${esc(q.stem)}</p>
+    ${optionsHtml}
+    <button class="reveal-btn" type="button" data-q="${q.id}" aria-expanded="false">Reveal answer</button>
+    <div class="panel" id="panel-${q.id}">
+      <div class="panel-inner">
+        <div class="panel-body"><span class="head">${panelLabel(q)}</span><div class="panel-prose">${formatMathText(panelText)}</div></div>
+      </div>
+    </div>
+  </article>`;
+}
+
+function renderPaper(p) {
+  return `
+  <section class="view" id="${p.slug}" data-total="${p.questions.length}" hidden aria-hidden="true">
+    <div class="paper-top">
+      <h2>${esc(p.title)}</h2>
+    </div>
+    ${p.questions.map(renderQuestion).join("")}
+  </section>`;
+}
+
+mainEl.innerHTML = PAPERS.map(renderPaper).join("");
+const paperRailEl = document.getElementById("paperRail");
+const questionRailEl = document.getElementById("questionRail");
+
+paperRailEl.innerHTML = `<div class="rail-label">Papers</div>` + PAPERS.map(p =>
+  `<button type="button" class="rail-item" data-view="${p.slug}">${esc(p.label)}<span class="count">${p.questions.length}</span></button>`
+).join("");
+
+function renderQuestionRail(slug) {
+  const paper = PAPERS.find(p => p.slug === slug);
+  if (!paper) return;
+  questionRailEl.innerHTML = `<div class="rail-label">Questions</div>` + paper.questions.map(q =>
+    `<a href="#${q.id}" class="qnav-item${revealed.has(q.id) ? " done" : ""}" data-jump="${q.id}">${esc(q.no)}</a>`
+  ).join("");
+  syncQuestionNavCurrent();
+}
+
+function syncQuestionNavCurrent() {
+  const hash = location.hash.slice(1);
+  const isQuestion = PAPERS.some(p => p.questions.some(q => q.id === hash));
+  questionRailEl.querySelectorAll(".qnav-item").forEach(a => {
+    if (isQuestion && a.dataset.jump === hash) a.setAttribute("aria-current", "true");
+    else a.removeAttribute("aria-current");
+  });
+}
+
+let current = null;
+
+function showView(slug, scrollToId) {
+  if (current === slug) {
+    if (scrollToId) scrollToQ(scrollToId);
+    return;
+  }
+  const next = document.getElementById(slug);
+  if (!next) return;
+  const prev = current && document.getElementById(current);
+
+  paperRailEl.querySelectorAll(".rail-item").forEach(btn => {
+    if (btn.dataset.view === slug) btn.setAttribute("aria-current", "true");
+    else btn.removeAttribute("aria-current");
+  });
+
+  const activate = () => {
+    if (prev) {
+      prev.classList.remove("active", "leaving");
+      prev.hidden = true;
+      prev.setAttribute("aria-hidden", "true");
+    }
+    next.hidden = false;
+    next.removeAttribute("aria-hidden");
+    next.classList.add("active");
+    current = slug;
+    renderQuestionRail(slug);
+    if (scrollToId) scrollToQ(scrollToId);
+    else window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  if (prev && prev.classList.contains("active") && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    prev.classList.add("leaving");
+    setTimeout(activate, 160);
+  } else {
+    activate();
+  }
+}
+
+function scrollToQ(id) {
+  requestAnimationFrame(() => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    syncQuestionNavCurrent();
+  });
+}
+
+function route() {
+  const hash = location.hash.slice(1);
+  const paper = PAPERS.find(p => p.slug === hash);
+  if (paper) return showView(paper.slug);
+  const owner = PAPERS.find(p => p.questions.some(q => q.id === hash));
+  if (owner) return showView(owner.slug, hash);
+  showView(PAPERS[0].slug);
+}
+
+paperRailEl.addEventListener("click", e => {
+  const btn = e.target.closest(".rail-item");
+  if (!btn) return;
+  history.replaceState(null, "", "#" + btn.dataset.view);
+  route();
+});
+window.addEventListener("hashchange", () => { route(); syncQuestionNavCurrent(); });
+route();
+
+window.addEventListener("load", () => {
+  document.querySelectorAll(".q.revealed .panel-prose").forEach(typesetMath);
+});
+
+mainEl.addEventListener("click", e => {
+  const btn = e.target.closest(".reveal-btn");
+  if (!btn) return;
+  const card = btn.closest(".q");
+  const open = card.classList.toggle("revealed");
+  btn.setAttribute("aria-expanded", String(open));
+  btn.textContent = open ? "Hide answer" : "Reveal answer";
+  const id = btn.dataset.q;
+  open ? revealed.add(id) : revealed.delete(id);
+  const qnav = questionRailEl.querySelector(`[data-jump="${id}"]`);
+  if (qnav) qnav.classList.toggle("done", open);
+  if (open) typesetMath(card.querySelector(".panel-prose"));
+});
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+</body>
+</html>

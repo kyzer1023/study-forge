@@ -1,0 +1,47 @@
+{
+  "papers": [
+    {
+      "paper_id": "CPT212-2011-MAY",
+      "title": "CPT212 May 2011",
+      "extraction_granularity": {
+        "status": "complete_child_subparts",
+        "source_structure_evidence": [
+          {
+            "source_ref": "past-year-cpt212-11-may-pdf:p3",
+            "observation": "Q2(a)(i) is a separate visual AVL-tree subpart on the rendered page."
+          }
+        ],
+        "expected_answerable_subparts": [
+          {
+            "question_id": "cpt212-2011-may-2011-q2-a-i",
+            "parent_question_id": "cpt212-2011-may-2011-q2-a",
+            "marks": 4,
+            "status": "Unreadable",
+            "rendered_page_image": "C:\\CS_USM\\Y2S2\\CPT212\\.study-forge\\source-pack\\rendered-pages\\past-year-cpt212-11-may-pdf-p0003-3.png"
+          }
+        ]
+      },
+      "questions": [
+        {
+          "question_id": "cpt212-2011-may-2011-q2-a",
+          "question_type": "structured",
+          "subparts": [
+            {
+              "question_id": "cpt212-2011-may-2011-q2-a-i",
+              "anchor_id": "cpt212-2011-may-q2-a-i",
+              "parent_question_id": "cpt212-2011-may-2011-q2-a",
+              "question_type": "structured",
+              "question_text": "The prompt references an AVL tree image that is visible on the rendered page but absent from extracted text.",
+              "marks": 4,
+              "status": "Unreadable",
+              "visual_dependency": true,
+              "visual_locator": "past-year-cpt212-11-may-pdf:p3#q2-a-i",
+              "rendered_page_image": "C:\\CS_USM\\Y2S2\\CPT212\\.study-forge\\source-pack\\rendered-pages\\past-year-cpt212-11-may-pdf-p0003-3.png",
+              "text_extraction_status": "visual_payload_missing"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

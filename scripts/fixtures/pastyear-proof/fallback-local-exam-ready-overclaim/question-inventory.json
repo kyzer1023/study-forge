@@ -1,0 +1,40 @@
+{
+  "papers": [
+    {
+      "paper_id": "PY-FALLBACK",
+      "title": "Past Year Fallback Regression",
+      "extraction_granularity": {
+        "status": "complete_child_subparts",
+        "source_structure_evidence": [
+          {
+            "source_ref": "past-year-fallback:p1",
+            "observation": "F1(a)(i) is a separate mark-bearing definition subpart."
+          }
+        ],
+        "expected_answerable_subparts": [
+          {
+            "question_id": "F1(a)(i)",
+            "parent_question_id": "F1(a)",
+            "marks": 2,
+            "status": "Answerable"
+          }
+        ]
+      },
+      "questions": [
+        {
+          "question_id": "F1(a)",
+          "question_type": "definition",
+          "subparts": [
+            {
+              "question_id": "F1(a)(i)",
+              "parent_question_id": "F1(a)",
+              "question_type": "definition",
+              "marks": 2,
+              "status": "Answerable"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

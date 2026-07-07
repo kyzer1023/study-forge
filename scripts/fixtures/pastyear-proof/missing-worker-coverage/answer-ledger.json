@@ -1,0 +1,31 @@
+{
+  "answers": [
+    {
+      "question_id": "B2(a)(i)",
+      "question_type": "subjective",
+      "question_text": "Explain why TCP uses acknowledgements.",
+      "answer": "TCP uses acknowledgements to confirm delivery and trigger retransmission when data is missing.",
+      "status": "Answered from source",
+      "student_explanation": "Acknowledgements let TCP detect missing segments and recover them.",
+      "source_refs": ["lecture-ch2:p12"]
+    },
+    {
+      "question_id": "B2(a)(ii)",
+      "question_type": "subjective",
+      "question_text": "Explain why UDP has lower overhead.",
+      "answer": "UDP avoids connection setup and delivery tracking, so it has less protocol overhead.",
+      "status": "Answered from source",
+      "student_explanation": "UDP sends datagrams without TCP-style reliability bookkeeping.",
+      "source_refs": ["lecture-ch2:p13"]
+    },
+    {
+      "question_id": "B2(a)(iii)",
+      "question_type": "subjective",
+      "question_text": "Compare TCP and UDP delivery guarantees.",
+      "answer": "TCP provides reliable ordered delivery, while UDP provides best-effort datagram delivery.",
+      "status": "Answered from source",
+      "student_explanation": "TCP tracks order and delivery; UDP leaves recovery to the application.",
+      "source_refs": ["lecture-ch2:p14"]
+    }
+  ]
+}
