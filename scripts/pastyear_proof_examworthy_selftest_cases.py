@@ -6,9 +6,12 @@ from scripts.pastyear_proof_model import JsonValue
 from scripts.pastyear_proof_selftest_cases import rewrite_json
 
 __all__ = (
+    "make_bilingual_mirror_question_duplicate",
     "make_coding_answer_hint_only",
     "make_duplicate_inventory_question_id",
     "make_duplicate_ledger_question_id",
+    "make_question_inventory_order_drift",
+    "make_raw_child_report_lacks_lane_findings",
     "make_nested_duplicate_ledger_question_id",
     "make_nested_paper_reports_ledger",
     "make_placeholder_learner_html",
@@ -184,6 +187,89 @@ def make_duplicate_inventory_question_id(proof_dir: Path) -> None:
         )
 
     rewrite_json(proof_dir / "question-inventory.json", mutate_inventory)
+
+
+def make_bilingual_mirror_question_duplicate(proof_dir: Path) -> None:
+    def mutate_inventory(data: JsonValue) -> None:
+        if not isinstance(data, dict):
+            return
+        papers = data.get("papers")
+        if not isinstance(papers, list) or not papers:
+            return
+        paper = papers[0]
+        if not isinstance(paper, dict):
+            return
+        questions = paper.get("questions")
+        if not isinstance(questions, list):
+            return
+        questions.append(
+            {
+                "question_id": "B2-2",
+                "question_type": "subjective",
+                "question_text": "Diberi protokol TCP, jelaskan fungsi pengakuan penerimaan.",
+                "marks": 2,
+                "status": "Duplicate",
+            }
+        )
+
+    def mutate_ledger(data: JsonValue) -> None:
+        if not isinstance(data, dict):
+            return
+        entries = data.get("answers")
+        if not isinstance(entries, list):
+            return
+        entries.append(
+            {
+                "paper_id": "PY2025",
+                "question_id": "B2-2",
+                "question_type": "subjective",
+                "question_text": "Diberi protokol TCP, jelaskan fungsi pengakuan penerimaan.",
+                "answer": None,
+                "status": "Duplicate",
+                "student_explanation": None,
+                "source_refs": [],
+            }
+        )
+
+    rewrite_json(proof_dir / "question-inventory.json", mutate_inventory)
+    rewrite_json(proof_dir / "answer-ledger.json", mutate_ledger)
+
+
+def make_question_inventory_order_drift(proof_dir: Path) -> None:
+    def mutate_inventory(data: JsonValue) -> None:
+        if not isinstance(data, dict):
+            return
+        papers = data.get("papers")
+        if not isinstance(papers, list) or not papers:
+            return
+        paper = papers[0]
+        if not isinstance(paper, dict):
+            return
+        questions = paper.get("questions")
+        if not isinstance(questions, list):
+            return
+        questions.insert(
+            0,
+            {
+                "question_id": "B3",
+                "question_type": "subjective",
+                "question_text": "Explain a checksum field.",
+                "marks": 2,
+                "status": "Answerable",
+            },
+        )
+
+    rewrite_json(proof_dir / "question-inventory.json", mutate_inventory)
+
+
+def make_raw_child_report_lacks_lane_findings(proof_dir: Path) -> None:
+    def mutate_raw_child(data: JsonValue) -> None:
+        if isinstance(data, dict):
+            data.clear()
+            data["status"] = "PASS"
+            data["report"] = "Evidence lane found the selected answers supported."
+
+    rewrite_json(proof_dir / "raw-child/evidence.json", mutate_raw_child)
 
 
 def make_ledger_question_text_drift(proof_dir: Path) -> None:

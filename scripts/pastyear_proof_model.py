@@ -13,6 +13,7 @@ JsonObject: TypeAlias = dict[str, JsonValue]
 class IssueCode(StrEnum):
     ANSWERED_WITHOUT_SOURCE_REFS = "answered_without_source_refs"
     ANSWERABLE_SUBPART_MISSING_LEDGER_ENTRY = "answerable_subpart_missing_ledger_entry"
+    BILINGUAL_MIRROR_QUESTION_DUPLICATE = "bilingual_mirror_question_duplicate"
     BLOCKING_FINDING_IN_READY_REPORT = "blocking_finding_in_ready_report"
     CONFLICTING_TOOLING_PREFLIGHT = "conflicting_tooling_preflight"
     DEGRADED_EXTRACTION_GRANULARITY = "degraded_extraction_granularity"
@@ -34,6 +35,8 @@ class IssueCode(StrEnum):
     MODEL_ANSWER_LACKS_EXAM_STRUCTURE = "model_answer_lacks_exam_structure"
     OUT_OF_SCOPE_MISSING_SYLLABUS_AUTHORITY = "out_of_scope_missing_syllabus_authority"
     PLACEHOLDER_QUESTION_TEXT = "placeholder_question_text"
+    QUESTION_INVENTORY_ORDER_DRIFT = "question_inventory_order_drift"
+    RAW_CHILD_REPORT_LACKS_LANE_FINDINGS = "raw_child_report_lacks_lane_findings"
     SOURCE_GAP_MISSING_EVIDENCE = "source_gap_missing_evidence"
     STALE_VERIFIER_REPORT = "stale_verifier_report"
     UNRESOLVED_FINDING_IN_READY_REPORT = "unresolved_finding_in_ready_report"

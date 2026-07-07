@@ -20,7 +20,9 @@ from scripts.pastyear_proof_model import (
 )
 from scripts.pastyear_proof_rules import (
     add_answer_issues,
+    add_identity_issues,
     add_learner_answer_issues,
+    add_raw_child_report_issues,
     add_readiness_contract_issues,
     add_readiness_issues,
     add_visual_issues,
@@ -81,7 +83,9 @@ def validate(proof_dir: Path, session_summary: Path | None) -> tuple[str, tuple[
     data = load_proof(proof_dir, session_summary, issues)
     add_readiness_issues(data, issues)
     add_readiness_contract_issues(data, issues)
+    add_identity_issues(data, issues)
     add_answer_issues(data, issues)
+    add_raw_child_report_issues(data, issues)
     add_learner_answer_issues(data, issues)
     add_visual_issues(data, issues)
     return readiness_state(data.qa_report), tuple(issues)

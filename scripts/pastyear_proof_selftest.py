@@ -8,6 +8,7 @@ from typing import Final
 from scripts.pastyear_proof_cli import print_result
 from scripts.pastyear_proof_model import IssueCode
 from scripts.pastyear_proof_examworthy_selftest_cases import (
+    make_bilingual_mirror_question_duplicate,
     make_coding_answer_hint_only,
     make_duplicate_inventory_question_id,
     make_duplicate_ledger_question_id,
@@ -16,6 +17,8 @@ from scripts.pastyear_proof_examworthy_selftest_cases import (
     make_nested_paper_reports_ledger,
     make_placeholder_learner_html,
     make_placeholder_question_text,
+    make_question_inventory_order_drift,
+    make_raw_child_report_lacks_lane_findings,
     make_stale_verifier_report,
     make_unresolved_major_report,
     make_visual_inspected_answer,
@@ -169,6 +172,22 @@ def run_self_test() -> int:
         expect_mutated_green(MutatedCase("nested-paper-reports-ledger", green, make_nested_paper_reports_ledger, IssueCode.DUPLICATE_LEDGER_QUESTION_ID)),
         expect_mutated_issue(MutatedCase("nested-duplicate-ledger-question-id", green, make_nested_duplicate_ledger_question_id, IssueCode.DUPLICATE_LEDGER_QUESTION_ID)),
         expect_mutated_issue(MutatedCase("duplicate-inventory-question-id", green, make_duplicate_inventory_question_id, IssueCode.DUPLICATE_QUESTION_INVENTORY_ID)),
+        expect_mutated_issue(
+            MutatedCase(
+                "bilingual-mirror-question-duplicate",
+                green,
+                make_bilingual_mirror_question_duplicate,
+                IssueCode.BILINGUAL_MIRROR_QUESTION_DUPLICATE,
+            )
+        ),
+        expect_mutated_issue(
+            MutatedCase(
+                "question-inventory-order-drift",
+                green,
+                make_question_inventory_order_drift,
+                IssueCode.QUESTION_INVENTORY_ORDER_DRIFT,
+            )
+        ),
         expect_mutated_issue(MutatedCase("ledger-question-text-drift", green, make_ledger_question_text_drift, IssueCode.LEDGER_QUESTION_TEXT_DRIFT)),
         expect_mutated_issue(MutatedCase("placeholder-question-text", green, make_placeholder_question_text, IssueCode.PLACEHOLDER_QUESTION_TEXT)),
         expect_mutated_issue(MutatedCase("placeholder-learner-html", green, make_placeholder_learner_html, IssueCode.PLACEHOLDER_QUESTION_TEXT)),
@@ -183,6 +202,14 @@ def run_self_test() -> int:
         expect_issue(Case("fallback-local-exam-ready-overclaim", fallback_exam_ready_overclaim, fallback_exam_ready_overclaim / "session-summary.json", IssueCode.FALLBACK_LOCAL_EXAM_READY_OVERCLAIM)),
         expect_mutated_issue(MutatedCase("stale-verifier-report", green, make_stale_verifier_report, IssueCode.STALE_VERIFIER_REPORT)),
         expect_mutated_issue(MutatedCase("unresolved-major-report", green, make_unresolved_major_report, IssueCode.UNRESOLVED_FINDING_IN_READY_REPORT)),
+        expect_mutated_issue(
+            MutatedCase(
+                "raw-child-report-lacks-lane-findings",
+                green,
+                make_raw_child_report_lacks_lane_findings,
+                IssueCode.RAW_CHILD_REPORT_LACKS_LANE_FINDINGS,
+            )
+        ),
         expect_mutated_issue(MutatedCase("fallback-inside-independent", green, make_fallback_inside_independent, IssueCode.FALLBACK_LOCAL_WITHOUT_INDEPENDENT_CHILD)),
         expect_mutated_issue(MutatedCase("fallback-report-claims-independent", green, make_fallback_report_claims_independent, IssueCode.FALLBACK_LOCAL_WITHOUT_INDEPENDENT_CHILD)),
         expect_mutated_issue(MutatedCase("fallback-reviewed-inside-independent", green, make_fallback_reviewed_report_inside_independent, IssueCode.FALLBACK_LOCAL_WITHOUT_INDEPENDENT_CHILD)),
