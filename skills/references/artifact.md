@@ -114,6 +114,8 @@ Atomic proof-plane contract:
 - Do not keep compacted worker-report placeholders such as "Question text was compacted..." in `question_text`, inventory stems, or learner HTML. Recover the source question text from the actual paper or mark the item `Unreadable`/`Source gap` with evidence.
 - Give every rendered ledger entry a unique non-empty `rendered_anchor`; duplicate, blank, or missing anchors are proof/render drift.
 - For objective questions, write answer-specific `student_explanation` text tied to the chosen answer and cited source support. Reject generic boilerplate explanations that could fit multiple different questions.
+- Preserve MCQ choices as structured `options` / `choices` payloads or faithfully parsed learner-visible options. An answer such as `Option A` is not exam-ready unless the actual option text is present in the ledger/rendered artifact; prefer `Option A: <choice text>` plus answer-specific reasoning.
+- Scale the model answer to the command word and mark value. High-mark, trace, algorithm, `describe and illustrate`, figure/table, or worked-operation prompts need ordered passes, state tables, diagrams described in text, or intermediate states, not just the final result.
 - For visual-dependent questions, keep machine-checkable visual evidence with the ledger entry or sidecar: `visual_locator`, `rendered_page_image`, `visual_payload`, `visual_inspection_status`, or `visual_worker_report_path`. Do not mark a figure, table, graph, tree, route map, formula image, or scanned prompt `Unreadable` solely because text extraction failed when a rendered page image exists.
 
 Syllabus-fit and scope classification:
@@ -132,6 +134,7 @@ Answer-production gate:
 - If an entire paper, a substantial section, or a whole question family becomes `Source gap` under `fallback_local`, `fallback_local_reviewed`, or `baseline_unverified`, treat it as an over-gapped fallback. Stop before normal delivery, run the missing harness-backed answer synthesis lane, or ask for explicit degraded acceptance with the limitation visible in `qa-report.json` and the final response.
 - A local renderer, local script, or answer-map builder may shape `answer-ledger.json`, but it must not become the answer authority. The Study Forge skill defines the output contract; the OmO/Codex harness decides the source work needed to satisfy it.
 - The ledger/output contract is the final proof and render shape, not the worker-thinking shape. Worker lanes may and should produce richer candidate-answer, extraction, evidence, and finding sidecars; the parent must integrate or explicitly reject those row-level findings before compressing them into `answer-ledger.json`.
+- The output contract is a floor, not a ceiling. Keep the row fields predictable for validation, but let `answer`, `student_explanation`, `options`, visual notes, and sidecars carry the full worked solution needed by the paper.
 
 Past-year learner design bridge:
 
@@ -178,6 +181,7 @@ Each `answer-ledger.json` entry must include these fields:
 - `topic`: string or null
 - `status`: one of `Answered from source`, `Source gap`, `Unreadable`, `Duplicate`, or `Out of scope`
 - `answer`: string or null; null for `Source gap`, `Unreadable`, `Duplicate`, and `Out of scope` unless a short non-answer note is needed; for supported items this is the exam-worthy model answer. Coding answers need code or pseudocode; trace answers need ordered steps, state tables, or transitions; structured answers need the final answer plus reasoning; objective answers need the selected option and answer-specific reasoning.
+- `options` or `choices`: array or object, optional for non-objective questions but required when an objective/MCQ answer refers to a lettered option rather than spelling out the chosen text. Keep the printed option labels and text.
 - `student_explanation`: string or null; learner-facing explanation for supported answers, secondary to the model answer
 - `source_refs`: array of source-reference objects; non-gap `Answered from source` entries require at least one source ref
 - `syllabus_fit`: one of `in_current_authority`, `partially_in_current_authority`, `outside_current_authority`, `unknown_current_authority`, or null; when no syllabus file exists, map to the current lecture/source pack as syllabus authority
@@ -208,7 +212,7 @@ Each worker coverage metadata sidecar record must include:
 
 Detailed page, slide, extraction, and source-reference notes belong in `source-index.json` and `answer-ledger.json`. Worker coverage, verifier, readiness, parent validation, tooling preflight, and raw report notes belong in `verifier-reports/`, `qa-report.json`, and worker coverage sidecars. The learner HTML should show only the question, answer/reveal panel, topic label, marks, and learner-relevant `Source gap`, `Unreadable`, or `Out of scope` note.
 
-Visual-dependent entries need a supported visual path before final rendering. If an answer uses a diagram, table, graph, tree, heap, B-tree, route map, image-only prompt, screenshot, or formula image, the ledger or sidecar must name the rendered visual payload and the visual inspection result. `Unreadable` is acceptable only after the rendered visual was inspected and recorded as cropped, blurry, missing, or otherwise unusable; a `pdftotext` miss alone is not enough.
+Visual-dependent entries need a supported visual path before final rendering. If an answer uses a diagram, table, graph, tree, heap, B-tree, route map, image-only prompt, screenshot, or formula image, the ledger or sidecar must name the rendered visual payload and the visual inspection result. Generic notes such as `fallback local inspection recorded` are not enough for an answered visual-dependent item; use concrete rendered-image evidence or a visual worker report. `Unreadable` is acceptable only after the rendered visual was inspected and recorded as cropped, blurry, missing, or otherwise unusable; a `pdftotext` miss alone is not enough.
 
 Sample answers, marking schemes, senior answers, and external worked solutions are untrusted cross-checks only. They can flag conflicts or wording expectations, but they cannot override current lecture evidence, the current syllabus file, or the current lecture/source pack used as syllabus authority.
 

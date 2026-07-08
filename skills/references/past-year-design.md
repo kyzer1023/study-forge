@@ -20,7 +20,7 @@ Load this reference when rendering `artifact past-year` learner HTML.
 After `answer-ledger.json` passes verifier fixes:
 
 1. Transform ledger entries into the `Paper` / `Question` data shape in `DESIGN.md`.
-2. Parse MCQ options out of `question_text` when `question_type` is objective; never leave options inside one `<pre>` blob.
+2. Parse MCQ options out of `question_text` or use structured `options` / `choices` fields when `question_type` is objective; never leave options inside one `<pre>` blob.
 3. Map `answer` to the MODEL ANSWER panel. Map `student_explanation` only to WHY / STUDY NOTE prose.
 4. Emit `index.html` using Script tokens, two-column rail shell, hash router, reveal behavior, and KaTeX from the reference mock.
 5. **Strip from HTML:** `source_refs`, `syllabus_fit`, verifier lane text, QA stats, build timestamps, "Answered from source" badges, Verifier Notes sections.
@@ -34,6 +34,8 @@ After `answer-ledger.json` passes verifier fixes:
 
 **Source gap:** small "Source gap" pill + study note panel; no correct-option highlight.
 
+**Exam-worthy answer shape:** objective entries must show the actual choice text, not only `Option A/B/C`; trace, algorithm, high-mark, or "describe and illustrate" entries must show the worked passes, state table, or intermediate states required by the paper.
+
 ## Verifier `learner_surface` checks
 
 When running the learner_surface lane, validate against `DESIGN.md` and `reference-mock.html`:
@@ -42,7 +44,7 @@ When running the learner_surface lane, validate against `DESIGN.md` and `referen
 - No source-basis or verifier blocks in visible HTML
 - One paper per hash-routed view (not one long scroll)
 - MCQ reveal highlights correct option(s) in green; explanation only in panel
-- Structured answers expand in MODEL ANSWER panel
+- Structured answers expand in MODEL ANSWER panel, including worked steps or tables when the command word or marks demand them
 - MODEL ANSWER text comes from `answer-ledger.answer`; `student_explanation` may support it but must not replace it
 - Math in panels typesets via KaTeX (or plain `^` auto-convert per DESIGN.md)
 

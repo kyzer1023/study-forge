@@ -5,11 +5,39 @@ from pathlib import Path
 import re
 from typing import Final, override
 
-from scripts.pastyear_proof_common import ANSWERED_STATUSES, normalized, question_text_is_placeholder, text_field
+from scripts.pastyear_proof_common import (
+    ANSWERED_STATUSES,
+    evidence_text,
+    normalized,
+    question_text_is_placeholder,
+    text_field,
+)
 from scripts.pastyear_proof_inventory import inventory_subparts, ledger_entries
 from scripts.pastyear_proof_model import Issue, IssueCode, JsonObject, JsonValue, ProofData
 
 TOKEN_RE: Final[re.Pattern[str]] = re.compile(r"[a-z0-9]+")
+MARK_VALUE_RE: Final[re.Pattern[str]] = re.compile(
+    r"\b(\d+(?:\.\d+)?)\s*(?:marks?|pts?|points?)\b|[\[(](\d+(?:\.\d+)?)/\d+(?:\.\d+)?[\])]",
+    re.IGNORECASE,
+)
+OPTION_ONLY_RE: Final[re.Pattern[str]] = re.compile(
+    r"\s*(?:the\s+)?(?:correct\s+)?(?:answer\s+is\s+)?(?:(?:option|choice)\s*)?[a-f]\s*[\).:]?\s*",
+    re.IGNORECASE,
+)
+OPTION_LINE_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?:^|[\n\r;])\s*(?:\(?[a-f]\)|[a-f][.)])\s+\S",
+    re.IGNORECASE,
+)
+OPTION_WORD_RE: Final[re.Pattern[str]] = re.compile(r"\b(?:option|choice)\s+[a-f]\b", re.IGNORECASE)
+NUMBERED_STEP_RE: Final[re.Pattern[str]] = re.compile(r"(?:^|\n)\s*\d+[.)]\s+\S")
+HIGH_MARK_THRESHOLD: Final[float] = 4.0
+MCQ_OPTION_FIELDS: Final[tuple[str, ...]] = (
+    "options",
+    "choices",
+    "mcq_options",
+    "answer_options",
+    "choice_options",
+)
 COMMON_ANSWER_TOKENS: Final[frozenset[str]] = frozenset(
     {
         "a",
@@ -48,6 +76,37 @@ TRACE_MARKERS: Final[tuple[str, ...]] = ("step", "state", "trace", "->", "=>", "
 REASONING_MARKERS: Final[tuple[str, ...]] = ("because", "therefore", "so ", "then", "after", "hence", "\n", ";")
 TRUE_FALSE_TYPES: Final[frozenset[str]] = frozenset({"true_false", "true/false", "boolean"})
 LOW_MARK_DEFINITION_TYPES: Final[frozenset[str]] = frozenset({"definition", "short_answer", "short answer"})
+WORKED_PROMPT_TERMS: Final[tuple[str, ...]] = (
+    "apply the",
+    "construct",
+    "describe and illustrate",
+    "draw",
+    "illustrate",
+    "perform the",
+    "show steps",
+    "show the steps",
+    "sort the following",
+    "trace",
+    "using a figure",
+    "using a table",
+)
+WORKED_STEP_MARKERS: Final[tuple[str, ...]] = (
+    "bucket",
+    "compare",
+    "diagram",
+    "digit",
+    "initial",
+    "iteration",
+    "pass",
+    "phase",
+    "round",
+    "state",
+    "step",
+    "swap",
+    "table",
+    "trace",
+    "|",
+)
 
 
 class LearnerTextParser(HTMLParser):
@@ -106,29 +165,112 @@ def marks_by_question_id(question_inventory: JsonValue) -> dict[str, float]:
     return marks
 
 
+def numeric_mark(value: JsonValue) -> float | None:
+    if isinstance(value, int | float) and not isinstance(value, bool):
+        return float(value)
+    return None
+
+
+def inferred_mark_from_entry(entry: JsonObject) -> float | None:
+    text = evidence_text(
+        [
+            entry.get("question_text"),
+            entry.get("prompt"),
+            entry.get("instruction"),
+            entry.get("context"),
+        ]
+    )
+    for match in MARK_VALUE_RE.finditer(text):
+        raw_mark = match.group(1) or match.group(2)
+        if raw_mark is not None:
+            return float(raw_mark)
+    return None
+
+
+def effective_mark(entry: JsonObject, inventory_mark: float | None) -> float | None:
+    return numeric_mark(entry.get("marks")) or inventory_mark or inferred_mark_from_entry(entry)
+
+
+def entry_has_choice_payload(entry: JsonObject) -> bool:
+    for field in MCQ_OPTION_FIELDS:
+        value = entry.get(field)
+        if isinstance(value, list) and sum(1 for item in value if evidence_text(item).strip()) >= 2:
+            return True
+        if isinstance(value, dict) and sum(1 for item in value.values() if evidence_text(item).strip()) >= 2:
+            return True
+        if isinstance(value, str):
+            if len(OPTION_LINE_RE.findall(value)) >= 2 or len(OPTION_WORD_RE.findall(value)) >= 2:
+                return True
+    prompt_text = evidence_text(
+        [
+            entry.get("question_text"),
+            entry.get("prompt"),
+            entry.get("instruction"),
+            entry.get("context"),
+        ]
+    )
+    return len(OPTION_LINE_RE.findall(prompt_text)) >= 2 or len(OPTION_WORD_RE.findall(prompt_text)) >= 2
+
+
+def answer_is_option_reference_only(answer: str) -> bool:
+    return OPTION_ONLY_RE.fullmatch(answer) is not None
+
+
+def answer_requires_worked_steps(entry: JsonObject, marks: float | None) -> bool:
+    if marks is not None and marks >= HIGH_MARK_THRESHOLD:
+        return True
+    prompt_text = evidence_text(
+        [
+            entry.get("question_text"),
+            entry.get("prompt"),
+            entry.get("instruction"),
+            entry.get("context"),
+        ]
+    )
+    return any(term in prompt_text for term in WORKED_PROMPT_TERMS)
+
+
+def answer_has_worked_steps(answer: str) -> bool:
+    answer_lower = answer.casefold()
+    marker_count = sum(answer_lower.count(marker) for marker in WORKED_STEP_MARKERS)
+    marker_count += len(NUMBERED_STEP_RE.findall(answer))
+    return marker_count >= 2
+
+
 def answer_has_exam_structure(entry: JsonObject, marks: float | None) -> bool:
     answer = text_field(entry, "answer") or ""
     explanation = text_field(entry, "student_explanation") or ""
     question_type = normalized(text_field(entry, "question_type"))
     answer_lower = answer.casefold()
+    answer_tokens = normalized_tokens(answer)
     explanation_tokens = normalized_tokens(explanation)
+    marks = effective_mark(entry, marks)
+    requires_worked_steps = answer_requires_worked_steps(entry, marks)
     match question_type:
         case "coding" | "code" | "pseudocode" | "algorithm":
             return any(marker in answer_lower for marker in CODING_MARKERS)
         case "trace" | "tracing":
-            return any(marker in answer_lower for marker in TRACE_MARKERS)
+            if not any(marker in answer_lower for marker in TRACE_MARKERS):
+                return False
+            return not requires_worked_steps or answer_has_worked_steps(answer)
         case "structured" | "essay" | "long_answer" | "long answer":
-            return len(normalized_tokens(answer)) >= 6 and any(marker in answer_lower for marker in REASONING_MARKERS)
+            if len(answer_tokens) < 6 or not any(marker in answer_lower for marker in REASONING_MARKERS):
+                return False
+            return not requires_worked_steps or answer_has_worked_steps(answer)
         case "objective" | "mcq" | "multiple_choice" | "multiple choice":
-            return bool(normalized_tokens(answer)) and len(explanation_tokens) >= 4
+            if answer_is_option_reference_only(answer) and not entry_has_choice_payload(entry):
+                return False
+            return bool(answer_tokens) and len(explanation_tokens) >= 4
         case "definition" | "short_answer" | "short answer":
-            return bool(normalized_tokens(answer)) and (marks is not None and marks <= 2 or len(normalized_tokens(answer)) >= 6)
+            return bool(answer_tokens) and (marks is not None and marks <= 2 or len(answer_tokens) >= 6)
         case "true_false" | "true/false" | "boolean":
-            return bool(normalized_tokens(answer)) and len(explanation_tokens) >= 3
+            return bool(answer_tokens) and len(explanation_tokens) >= 3
         case "":
-            return bool(normalized_tokens(answer))
+            return bool(answer_tokens)
         case _:
-            return bool(normalized_tokens(answer))
+            if requires_worked_steps:
+                return len(answer_tokens) >= 6 and answer_has_worked_steps(answer)
+            return bool(answer_tokens)
 
 
 def add_learner_answer_issues(data: ProofData, issues: list[Issue]) -> None:

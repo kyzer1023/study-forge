@@ -10,10 +10,13 @@ __all__ = (
     "make_coding_answer_hint_only",
     "make_duplicate_inventory_question_id",
     "make_duplicate_ledger_question_id",
+    "make_generic_visual_fallback_answer",
+    "make_high_mark_illustration_answer_without_steps",
     "make_question_inventory_order_drift",
     "make_raw_child_report_lacks_lane_findings",
     "make_nested_duplicate_ledger_question_id",
     "make_nested_paper_reports_ledger",
+    "make_option_only_answer_without_choices",
     "make_placeholder_learner_html",
     "make_placeholder_question_text",
     "make_ledger_question_text_drift",
@@ -76,6 +79,94 @@ def make_coding_answer_hint_only(proof_dir: Path) -> None:
             first["answer"] = "Search each item until found."
             first["student_explanation"] = "Scan the list."
 
+    rewrite_json(proof_dir / "answer-ledger.json", mutate_ledger)
+
+
+def make_option_only_answer_without_choices(proof_dir: Path) -> None:
+    def mutate_inventory(data: JsonValue) -> None:
+        if not isinstance(data, dict):
+            return
+        papers = data.get("papers")
+        if not isinstance(papers, list) or not papers:
+            return
+        paper = papers[0]
+        if not isinstance(paper, dict):
+            return
+        questions = paper.get("questions")
+        if not isinstance(questions, list) or not questions:
+            return
+        first = questions[0]
+        if not isinstance(first, dict):
+            return
+        subparts = first.get("subparts")
+        if not isinstance(subparts, list) or not subparts:
+            return
+        subpart = subparts[0]
+        if isinstance(subpart, dict):
+            subpart["question_type"] = "objective"
+            subpart["question_text"] = "Which traversal visits the root node before its children?"
+            subpart["marks"] = 1
+
+    def mutate_ledger(data: JsonValue) -> None:
+        if not isinstance(data, dict):
+            return
+        entries = data.get("answers")
+        if not isinstance(entries, list) or not entries:
+            return
+        first = entries[0]
+        if isinstance(first, dict):
+            first["question_type"] = "objective"
+            first["question_text"] = "Which traversal visits the root node before its children?"
+            first["marks"] = 1
+            first["answer"] = "Option A"
+            first["student_explanation"] = "Preorder is the traversal that visits the root before child nodes."
+
+    rewrite_json(proof_dir / "question-inventory.json", mutate_inventory)
+    rewrite_json(proof_dir / "answer-ledger.json", mutate_ledger)
+
+
+def make_high_mark_illustration_answer_without_steps(proof_dir: Path) -> None:
+    prompt = "Describe and illustrate using a figure how radix sort processes egg, bee, apple, bean, abc, citrus. (30/100)"
+
+    def mutate_inventory(data: JsonValue) -> None:
+        if not isinstance(data, dict):
+            return
+        papers = data.get("papers")
+        if not isinstance(papers, list) or not papers:
+            return
+        paper = papers[0]
+        if not isinstance(paper, dict):
+            return
+        questions = paper.get("questions")
+        if not isinstance(questions, list) or not questions:
+            return
+        first = questions[0]
+        if not isinstance(first, dict):
+            return
+        subparts = first.get("subparts")
+        if not isinstance(subparts, list) or not subparts:
+            return
+        subpart = subparts[0]
+        if isinstance(subpart, dict):
+            subpart["question_type"] = "structured"
+            subpart["question_text"] = prompt
+            subpart["marks"] = 30
+
+    def mutate_ledger(data: JsonValue) -> None:
+        if not isinstance(data, dict):
+            return
+        entries = data.get("answers")
+        if not isinstance(entries, list) or not entries:
+            return
+        first = entries[0]
+        if isinstance(first, dict):
+            first["question_type"] = "structured"
+            first["question_text"] = prompt
+            first["marks"] = 30
+            first["answer"] = "The final sorted order is abc -> apple -> bean -> bee -> citrus -> egg because radix sort is stable."
+            first["student_explanation"] = "The answer gives the final order but omits pass-by-pass buckets and intermediate states."
+
+    rewrite_json(proof_dir / "question-inventory.json", mutate_inventory)
     rewrite_json(proof_dir / "answer-ledger.json", mutate_ledger)
 
 
@@ -328,6 +419,67 @@ def make_visual_inspected_answer(proof_dir: Path) -> None:
             first["visual_inspection_status"] = "inspected_supported"
             first["visual_worker_report_path"] = "raw-child/evidence.json"
 
+    def mutate_raw_child(data: JsonValue) -> None:
+        if isinstance(data, dict):
+            data["findings"] = [
+                {
+                    "question_id": "B2(a)(i)",
+                    "status": "PASS",
+                    "visual_evidence": "Rendered AVL tree image inspected; node labels support the traversal answer.",
+                }
+            ]
+
+    rewrite_json(proof_dir / "answer-ledger.json", mutate_ledger)
+    rewrite_json(proof_dir / "raw-child/evidence.json", mutate_raw_child)
+
+
+def make_generic_visual_fallback_answer(proof_dir: Path) -> None:
+    prompt = "Using the graph shown below, give the shortest path after applying Dijkstra's algorithm."
+
+    def mutate_inventory(data: JsonValue) -> None:
+        if not isinstance(data, dict):
+            return
+        papers = data.get("papers")
+        if not isinstance(papers, list) or not papers:
+            return
+        paper = papers[0]
+        if not isinstance(paper, dict):
+            return
+        questions = paper.get("questions")
+        if not isinstance(questions, list) or not questions:
+            return
+        first = questions[0]
+        if not isinstance(first, dict):
+            return
+        subparts = first.get("subparts")
+        if not isinstance(subparts, list) or not subparts:
+            return
+        subpart = subparts[0]
+        if isinstance(subpart, dict):
+            subpart["question_type"] = "structured"
+            subpart["question_text"] = prompt
+            subpart["visual_dependency"] = True
+
+    def mutate_ledger(data: JsonValue) -> None:
+        if not isinstance(data, dict):
+            return
+        entries = data.get("answers")
+        if not isinstance(entries, list) or not entries:
+            return
+        first = entries[0]
+        if isinstance(first, dict):
+            first["question_type"] = "structured"
+            first["question_text"] = prompt
+            first["answer"] = "The shortest path is A to C because it has the lowest total distance after edge relaxation."
+            first["student_explanation"] = "The answer depends on the graph weights shown in the paper figure."
+            first["visual_dependency"] = True
+            first["visual_inspection_status"] = "fallback local inspection recorded"
+            first["visual_inspection_evidence"] = (
+                "Local answer depends on a tree, graph, diagram, or similar visual; "
+                "retained with local visual lane sidecar."
+            )
+
+    rewrite_json(proof_dir / "question-inventory.json", mutate_inventory)
     rewrite_json(proof_dir / "answer-ledger.json", mutate_ledger)
 
 
